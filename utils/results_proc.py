@@ -21,7 +21,7 @@ def average_results(func, inputs, num_episodes,
 def process_results(results, title, save, grammar=False):
     results_all = np.empty((0,5))
     for i in range(len(results)):
-		results_all = np.append(results_all, results[i][1], axis=0)
+        results_all = np.append(results_all, results[i][1], axis=0)
     results_avg = []
     for x in sorted(np.unique(results_all[...,0])):
         results_avg.append([x,
@@ -33,13 +33,13 @@ def process_results(results, title, save, grammar=False):
         results_all_grammar = np.empty((0,3))
         for i in range(len(results)):
             results_all_grammar = np.append(results_all_grammar, results[i][2], axis=0)
-	    results_avg_grammar = []
-	    for x in sorted(np.unique(results_all_grammar[...,0])):
-	        results_avg_grammar.append([x,
-	                            np.average(results_all_grammar[np.where(results_all_grammar[...,0]==x)][...,1]),
-	                            np.std(results_all_grammar[np.where(results_all_grammar[...,0]==x)][...,1]),
-								np.average(results_all_grammar[np.where(results_all_grammar[...,0]==x)][...,2]),
-	                            np.std(results_all_grammar[np.where(results_all_grammar[...,0]==x)][...,2])])
+        results_avg_grammar = []
+        for x in sorted(np.unique(results_all_grammar[...,0])):
+            results_avg_grammar.append([x,
+                                np.average(results_all_grammar[np.where(results_all_grammar[...,0]==x)][...,1]),
+                                np.std(results_all_grammar[np.where(results_all_grammar[...,0]==x)][...,1]),
+                                np.average(results_all_grammar[np.where(results_all_grammar[...,0]==x)][...,2]),
+                                np.std(results_all_grammar[np.where(results_all_grammar[...,0]==x)][...,2])])
         np.savetxt(title[:-4] + "_grammar.txt", np.array(results_avg_grammar))
     if save:
         np.savetxt(title, np.array(results_avg))

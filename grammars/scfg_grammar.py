@@ -2,10 +2,8 @@ from __future__ import division, print_function
 import os
 import math
 import numpy as np
-import cPickle
-from pickle import dumps,loads
-from cfg_grammar import *
-from hmmlearn import hmm
+from grammars.cfg_grammar import *
+# from hmmlearn import hmm
 
 from keras.layers import *
 from keras import Input

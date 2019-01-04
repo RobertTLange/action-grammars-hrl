@@ -11,11 +11,19 @@ Implementation of ICML 2019 submitted paper.
 
 ## TODO - CODING:
 * [ ] Create env, repo and base structure
+* [ ] Write setup script
 * [ ] Reimplement Towers of Hanoi setup (State: Final MSc Project)
+* Towers of Hanoi Experiments
+    * [ ] Implement better baselines
+    * [ ] Investigate transfer learning via grammars
+    * [ ] Implement grammar dictionary similiar to ER buffer
 
 
 ## TODO - PAPER:
+* [ ] Time plan for ICML 2019
 * [ ] Rough structure - write text/base body
+* [ ] Read Pineau DRL overview paper
+* [ ] Formalize DQN
 
 
 ## Repository Structure
@@ -27,19 +35,23 @@ Action Grammars
 ## How to use this code
 1. Clone the repo.
 ```
-git clone https://github.com/RobertTLange/Bio-Plausible-DeepLearning && cd Bio-Plausible-DeepLearning
+git clone https://github.com/RobertTLange/action-grammars-hrl && cd action-grammars-hrl
 ```
 2. Create a virtual environment (optional but recommended).
 ```
-virtualenv -p python BPDL
+virtualenv -p python AG
 ```
 Activate the env (the following command works on Linux, other operating systems might differ):
 ```
-source BPDL/bin/activate
+source AG/bin/activate
 ```
-3. Install all dependencies:
+3a. Install all dependencies via pip:
 ```
 pip install -r requirements.txt
+```
+3b. Install all remaining dependencies:
+```
+source setup.bash
 ```
 4. Run the main notebook:
 ```

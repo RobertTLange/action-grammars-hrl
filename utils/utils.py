@@ -2,7 +2,7 @@ import string
 import random
 import time
 import numpy as np
-from scfg_grammar import *
+from grammars.scfg_grammar import *
 
 def softmax_action(q_table, state):
     """
@@ -93,15 +93,15 @@ def rollout(env, Q, gamma, num_rollouts, max_steps,
     for i in range(num_rollouts):
         state = env.reset()
 
-    	steps = 0
-    	rewards = []
+        steps = 0
+        rewards = []
 
-    	action_episode = []
-    	state_episode = [state]
+        action_episode = []
+        state_episode = [state]
         unique_states.add(state)
-    	while steps < max_steps:
+        while steps < max_steps:
             if render:
-            	env.render()
+                env.render()
             steps += 1
             action = greedy_action(Q, state)
             if action >= num_primitives:
@@ -126,28 +126,28 @@ def rollout(env, Q, gamma, num_rollouts, max_steps,
                 for state in new_states:
                     unique_states.add(state)
             else:
-            	new_state, reward, done, _ = env.step(action)
-            	state = new_state
-            	rewards.append(reward)
-            	action_episode.append(action)
-            	state_episode.append(state)
+                new_state, reward, done, _ = env.step(action)
+                state = new_state
+                rewards.append(reward)
+                action_episode.append(action)
+                state_episode.append(state)
                 unique_states.add(state)
             if done:
-            	break
+                break
 
-    	reward_list.append(discounted_return(rewards, gamma))
-    	steps_list.append(steps)
-    	action_list.append(action_episode)
-    	state_list.append(state_episode)
+        reward_list.append(discounted_return(rewards, gamma))
+        steps_list.append(steps)
+        action_list.append(action_episode)
+        state_list.append(state_episode)
 
     if hmm:
         unobs_states = set(range(no_obs)).difference(unique_states)
         for state in list(unobs_states):
             state_list.append([state])
     if return_traces:
-    	return reward_list, steps_list, action_list, state_list
+        return reward_list, steps_list, action_list, state_list
     else:
-    	return reward_list, steps_list
+        return reward_list, steps_list
 
 
 def gen_macro_dictionary(num_primitives):
