@@ -21,40 +21,36 @@ class ReplayBuffer(object):
 
 
 class Agent():
-    def __init__(self, env, init_position):
-        self.set_position(init_position)
+    def __init__(self, env):
         self.num_actions = env.action_space.n
+        self.allowed = env.get_movability_map()
 
-    def random_action(self):
-        return np.random.randint(low=0, high=self.num_actions)
-
-    def set_position(self, new_pos):
-        self.position = np.array(new_pos)
-
-    def get_position(self):
-        return self.position
+    def random_action(self, state):
+        valid_actions = np.where(self.allowed[state] != -np.inf)[0]
+        return np.random.choice(valid_actions)
 
 
 class Agent_Q(Agent):
-    def __init__(self, env, init_position, q_func):
-        super().__init__(env, init_position)
+    def __init__(self, env, q_func):
+        super().__init__(env)
         self.q_func = q_func
 
     def greedy_action(self, state):
         q_values = self.q_func(state)
-        return np.argmax(q_values)
+        temp = np.where(q_values == np.max(q_values))[0]
+        return np.random.choice(temp)
 
     def epsilon_greedy_action(self, state, eps=0.1):
         roll = np.random.random()
         if roll <= eps:
-            return self.random_action()
+            return self.random_action(state)
         else:
             return self.greedy_action(state)
 
 
 class SMDP_Agent_Q(Agent_Q):
-    def __init__(self, env, init_position, q_func, macros):
-        super().__init__(env, init_position, q_func)
+    def __init__(self, env, q_func, macros):
+        super().__init__(env, q_func)
         if not len(macros)==self.q_func.num_actions:
             print("WARNING: Number of options does not match Q-table dimensions")
         self.macros = macros

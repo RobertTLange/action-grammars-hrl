@@ -5,22 +5,23 @@ Implementation of ICML 2019 submitted paper.
 
 
 ## DONE:
-
-* [ ]
+* [x] Create env, repo and base structure
 
 
 ## TODO - CODING:
-* [ ] Create env, repo and base structure
 * [ ] Write setup script
-* [ ] Reimplement Towers of Hanoi setup (State: Final MSc Project)
-* Towers of Hanoi Experiments
+* [ ] Restructure Towers of Hanoi setup (State: Final MSc Project)
+    * [ ] Base Q-Learner
+    * [ ] Add logging module
+    * [ ] Macro Q-Learner
+* [ ] Towers of Hanoi Experiments
     * [ ] Implement better baselines
     * [ ] Investigate transfer learning via grammars
     * [ ] Implement grammar dictionary similiar to ER buffer
 
 
 ## TODO - PAPER:
-* [ ] Time plan for ICML 2019
+* [x] Time plan for ICML 2019
 * [ ] Rough structure - write text/base body
 * [ ] Read Pineau DRL overview paper
 * [ ] Formalize DQN
@@ -57,3 +58,13 @@ source setup.bash
 ```
 jupyter notebook workspace.ipynb
 ```
+
+## Jupyter Env Setup
+conda create --name AG python=3.6 --no-default-packages
+source activate AG
+pip install ipykernel
+python -m ipykernel install --user --name AG --display-name "Python3 (AG)"
+pip install jupyterlab
+
+conda env remove -n AG
+jupyter kernelspec uninstall AG
