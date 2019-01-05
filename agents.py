@@ -7,8 +7,8 @@ class ReplayBuffer(object):
         self.buffer = deque(maxlen=capacity)
 
     def push(self, ep_id, state, action, reward, next_state, done):
-        state = np.expand_dims(state, 0)
-        next_state = np.expand_dims(next_state, 0)
+        state = state
+        next_state = next_state
 
         self.buffer.append((ep_id, state, action, reward, next_state, done))
 
