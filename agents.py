@@ -1,23 +1,70 @@
 import numpy as np
+import itertools
 
-from collections import deque
+class QTable():
+    def __init__(self, table):
+        self.table = table
 
-class ReplayBuffer(object):
-    def __init__(self, capacity):
-        self.buffer = deque(maxlen=capacity)
+    def __call__(self, state):
+        try:
+            qs = self.table[tuple(state)]
+        except IndexError:
+            qs = np.zeros(self.num_actions)
+            print("WARNING: IndexError in Q-function. Returning zeros.")
+        return qs
 
-    def push(self, ep_id, state, action, reward, next_state, done):
-        state = state
-        next_state = next_state
+    def update_table(self, state, q, action=None):
+        if action is None:
+            assert(len(q)==self.num_actions)
+            self.table[tuple(state)] = q
+        else:
+            self.table[tuple(state)][action] = q
 
-        self.buffer.append((ep_id, state, action, reward, next_state, done))
+    def update_all(self, Q):
+        self.table = Q
 
-    def sample(self, batch_size):
-        ep_id, state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
-        return ep_id, np.concatenate(state), action, reward, np.concatenate(next_state), done
 
-    def __len__(self):
-        return len(self.buffer)
+class SMDPQTable():
+    def __init__(self, q_table, macros):
+        self.table = self.gen_valid_table(q_table, macros)
+
+    def __call__(self, state):
+        try:
+            qs = self.table[tuple(state)]
+        except IndexError:
+            qs = np.zeros(self.num_actions)
+            print("WARNING: IndexError in Q-function. Returning zeros.")
+        return qs
+
+    def update_table(self, state, q, action=None):
+        if action is None:
+            assert(len(q)==self.num_actions)
+            self.table[tuple(state)] = q
+        else:
+            self.table[tuple(state)][action] = q
+
+    def update_all(self, Q):
+        self.table = Q
+
+    def gen_valid_table(self, q_table, macros):
+
+        dims = q_table.shape
+        dims_temp = list(dims)
+        dims_temp[-1] = len(macros)
+
+        num_disks = len(dims) - 1
+
+        temp_table = np.zeros(tuple(dims_temp))
+
+        table = np.concatenate((q_table, temp_table), axis=num_disks)
+
+        id_list = num_disks*[0] + num_disks*[1] + num_disks*[2]
+        states = list(itertools.permutations(id_list, num_disks))
+        for state in states:
+            for i, macro in enumerate(macros):
+                start_action = macro.action_seq[0]
+                table[state][i+6] = table[state][start_action]
+        return table
 
 
 class Agent():
@@ -31,9 +78,9 @@ class Agent():
 
 
 class Agent_Q(Agent):
-    def __init__(self, env, q_func):
+    def __init__(self, env):
         super().__init__(env)
-        self.q_func = q_func
+        self.q_func = QTable(env.get_movability_map())
 
     def greedy_action(self, state):
         q_values = self.q_func(state)
@@ -49,12 +96,12 @@ class Agent_Q(Agent):
 
 
 class SMDP_Agent_Q(Agent_Q):
-    def __init__(self, env, q_func, macros):
-        super().__init__(env, q_func)
-        if not len(macros)==self.q_func.num_actions:
-            print("WARNING: Number of options does not match Q-table dimensions")
-        self.macros = macros
-        self.num_macros    = len(self.macros)
+    def __init__(self, env, macros):
+        super().__init__(env)
+        self.q_func = SMDPQTable(env.get_movability_map(), macros)
+
+		self.macros = macros
+        self.num_macros = len(self.macros)
         self.current_macro = None
         for i, mac in enumerate(self.macros):
             mac.identifier = i
@@ -75,7 +122,7 @@ class Macro():
     def __init__(self, env, action_seq):
         self.action_seq = action_seq
         self.macro_len = len(self.action_seq)
-		self.env = env
+        self.env = env
 
         if type(self.action_seq) is str:
             self.action_seq = self.convert_string()
@@ -90,15 +137,18 @@ class Macro():
         return macro_actions
 
     def follow_macro(self):
-		act_temp = self.action_seq[self.current_time]
-		# TODO: WRITE THIS FUNCTION
-		env.move_allowed(action_to_move[act_temp])
+        act_temp = self.action_seq[self.current_time]
+        self.current_time += 1
 
-		self.current_time += 1
+        if self.current_time == self.macro_len:
+            self.activity = False
 
-		if self.current_time == self.macro_len:
-			self.activity = False
-        return act_temp
+        if env.move_allowed(action_to_move[act_temp]):
+            return act_temp
+        else:
+            self.activity = False
+            return None
+
 
 
 letter_to_action = {"a": 0, "b": 1, "c": 2,

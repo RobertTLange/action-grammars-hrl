@@ -1,28 +1,5 @@
 import numpy as np
-from utils.general import greedy_eval
-from agents import ReplayBuffer
-
-class QTable():
-    def __init__(self, table):
-        self.table = table
-
-    def __call__(self,state):
-        try:
-            qs = self.table[tuple(state)]
-        except IndexError:
-            qs = np.zeros(self.num_actions)
-            print("WARNING: IndexError in Q-function. Returning zeros.")
-        return qs
-
-    def update_table(self, state, q, action=None):
-        if action is None:
-            assert(len(q)==self.num_actions)
-            self.table[tuple(state)] = q
-        else:
-            self.table[tuple(state)][action] = q
-
-    def update_all(self, Q):
-        self.table = Q
+from utils.general import ReplayBuffer, greedy_eval
 
 
 def q_learning_update(gamma, alpha, lambd, q_func, eligibility,

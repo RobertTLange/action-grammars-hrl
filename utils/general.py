@@ -1,4 +1,24 @@
 import numpy as np
+from collections import deque
+
+
+class ReplayBuffer(object):
+    def __init__(self, capacity):
+        self.buffer = deque(maxlen=capacity)
+
+    def push(self, ep_id, state, action, reward, next_state, done):
+        state = state
+        next_state = next_state
+
+        self.buffer.append((ep_id, state, action, reward, next_state, done))
+
+    def sample(self, batch_size):
+        ep_id, state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
+        return ep_id, np.concatenate(state), action, reward, np.concatenate(next_state), done
+
+    def __len__(self):
+        return len(self.buffer)
+
 
 def discounted_return(rewards, gamma):
     """
