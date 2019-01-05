@@ -11,8 +11,8 @@ Implementation of ICML 2019 submitted paper.
 ## TODO - CODING:
 * [ ] Write setup script
 * [ ] Restructure Towers of Hanoi setup (State: Final MSc Project)
-    * [ ] Base Q-Learner
-    * [ ] Add logging module
+    * [x] Base Q-Learner
+    * [x] Add logging module
     * [ ] Macro Q-Learner
 * [ ] Towers of Hanoi Experiments
     * [ ] Implement better baselines
