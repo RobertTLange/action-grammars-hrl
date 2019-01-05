@@ -8,3 +8,6 @@ def learning_parameters(l_type):
         epsilon = 0.1  # Exploration parameter
 
         return alpha, gamma, lambd, epsilon
+
+    elif l_type == "Macro-Q-Learning":
+        return

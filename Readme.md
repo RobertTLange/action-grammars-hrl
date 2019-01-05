@@ -13,6 +13,8 @@ Implementation of ICML 2019 submitted paper.
 * [ ] Restructure Towers of Hanoi setup (State: Final MSc Project)
     * [x] Base Q-Learner
     * [x] Add logging module
+    * [ ] Write base Macro module
+    * [ ] Write function that checks executability of macro
     * [ ] Macro Q-Learner
 * [ ] Towers of Hanoi Experiments
     * [ ] Implement better baselines

@@ -72,36 +72,37 @@ class SMDP_Agent_Q(Agent_Q):
 
 
 class Macro():
-    def __init__(self, action_seq):
+    def __init__(self, env, action_seq):
         self.action_seq = action_seq
-        self.macro_len = len(action_seq)
+        self.macro_len = len(self.action_seq)
+		self.env = env
+
+        if type(self.action_seq) is str:
+            self.action_seq = self.convert_string()
+
         self.current_time = 0
         self.activity = False
 
-    def act(self, state):
-        if self.check_termination(state):
-            return None
-        else:
-            return int(self.policy[tuple(state)])
+    def convert_string(self):
+        macro_actions = []
+        for i, let in enumerate(self.action_seq):
+            macro_actions.append(letter_to_action[let])
+        return macro_actions
 
-    def greedy_action(self,state):
-        return self.act(state)
+    def follow_macro(self):
+		act_temp = self.action_seq[self.current_time]
+		# TODO: WRITE THIS FUNCTION
+		env.move_allowed(action_to_move[act_temp])
 
-    def check_validity(self,state):
-        """Returns boolean indicator of whether or not the state is among valid
-           starting points for this option.
-        """
-        if type(state)==np.ndarray:
-            state = state.tolist()
-        return state in self.activation.tolist()
+		self.current_time += 1
 
-    def check_termination(self,state):
-        """Returns boolean indicator of whether or not the policy is at a
-           termination state. (or not in a valid state to begin with)
-        """
-        if type(state)==np.ndarray:
-            state = state.tolist()
-        if state in self.termination.tolist() or not self.check_validity(state):
-            return True
-        else:
-            return False
+		if self.current_time == self.macro_len:
+			self.activity = False
+        return act_temp
+
+
+letter_to_action = {"a": 0, "b": 1, "c": 2,
+                    "d": 3, "e": 4, "f": 5}
+
+action_to_move = {0: (0, 1), 1: (0, 2), 2: (1, 0),
+                  3: (1, 2), 4: (2, 0), 5: (2, 1)}
