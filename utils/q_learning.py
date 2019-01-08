@@ -1,4 +1,5 @@
 import numpy as np
+from agents import QTable
 from utils.general import ReplayBuffer, greedy_eval
 
 
@@ -10,22 +11,24 @@ def q_learning_update(gamma, alpha, lambd, q_func, eligibility,
     else:
         target = reward + gamma * np.max(q_func(next_state))
 
-    eligibility[cur_state][action] += 1
-    td_err = target - q_func(cur_state)[action]
-    Q = q_func.table + alpha* td_err * eligibility
-
-    if stp > 1:
+    if stp > 0:
         if old_greedy_choice == action:
-            eligibility[old_state][old_action] *= gamma*lambd
+            eligibility(old_state)[old_action] *= gamma*lambd
         else:
-            eligibility[old_state][old_action] = 0
+            eligibility(old_state)[old_action] = 0
 
-    q_func.update_all(Q)
+    eligibility(cur_state)[action] += 1
+
+    td_err = target - q_func(cur_state)[action]
+    Q_new = q_func.table + alpha* td_err * eligibility.table
+
+    q_func.update_all(Q_new)
     return eligibility, td_err
 
 
 def q_learning(env, agent, num_episodes, max_steps,
-               gamma, alpha, lambd, log_freq, log_episodes, verbose):
+               gamma, alpha, lambd, epsilon,
+               log_freq, log_episodes, verbose):
 
     log_template = "Ep: {:>2} | Avg/Std Steps: {:.2f}/{:.2f} | Avg/Std Ret: {:.2f}/{:.2f} | Success R: {:.2f}"
     log_counter = 0
@@ -36,46 +39,44 @@ def q_learning(env, agent, num_episodes, max_steps,
 
     for ep_id in range(num_episodes):
 
-        cur_state = env.reset()
+        state = env.reset()
 
         stp = 0
         tot_td = 0
         rewards = []
 
-        eligibility = np.zeros(agent.q_func.table.shape)
+        eligibility = QTable(np.zeros(env.num_disks*(3, ) + (6,)))
 
         old_greedy_choice = None
         old_action = None
         old_state = None
 
         for i in range(max_steps):
-            action = agent.epsilon_greedy_action(cur_state)
+            action = agent.epsilon_greedy_action(state, epsilon)
             next_state, reward, done, _ = env.step(action)
             greedy_choice = agent.greedy_action(next_state)
 
             # Update value function
             eligibility, tde = q_learning_update(gamma, alpha, lambd, agent.q_func,
-                                                 eligibility, cur_state, action,
+                                                 eligibility, state, action,
                                                  next_state, reward, done, stp,
                                                  old_greedy_choice, old_action, old_state)
 
             # Extend replay buffer
-            er_buffer.push(ep_id, old_state, action, reward, next_state, done)
+            er_buffer.push(ep_id, state, action, reward, next_state, done)
 
             # Update variables
-            old_state = cur_state
+            old_state = state
             old_action = action
             old_greedy_choice = greedy_choice
-            cur_state = next_state
+            state = next_state
 
             # Update counters
             stp += 1
             tot_td += tde
             rewards.append(reward)
 
-            # Go to next episode if successfully ended
-            if done:
-                break
+            if done: break
 
         if ep_id % log_freq == 0:
             avg_steps, sd_steps, avg_ret, sd_ret, success_rate = greedy_eval(env, agent, gamma,

@@ -13,8 +13,9 @@ Implementation of ICML 2019 submitted paper.
 * [ ] Restructure Towers of Hanoi setup (State: Final MSc Project)
     * [x] Base Q-Learner
     * [x] Add logging module
-    * [ ] Write base Macro module
-    * [ ] Write function that checks executability of macro
+    * [x] Write base Macro module
+    * [x] Write function that checks executability of macro
+    * [ ] Check what is wrong with rollout function
     * [ ] Macro Q-Learner
 * [ ] Towers of Hanoi Experiments
     * [ ] Implement better baselines
@@ -26,7 +27,7 @@ Implementation of ICML 2019 submitted paper.
 * [x] Time plan for ICML 2019
 * [ ] Rough structure - write text/base body
 * [ ] Read Pineau DRL overview paper
-* [ ] Formalize DQN
+* [ ] Formalize DQN with macros
 
 
 ## Repository Structure

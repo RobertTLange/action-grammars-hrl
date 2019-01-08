@@ -87,7 +87,7 @@ class Agent_Q(Agent):
         temp = np.where(q_values == np.max(q_values))[0]
         return np.random.choice(temp)
 
-    def epsilon_greedy_action(self, state, eps=0.1):
+    def epsilon_greedy_action(self, state, eps):
         roll = np.random.random()
         if roll <= eps:
             return self.random_action(state)
@@ -100,7 +100,7 @@ class SMDP_Agent_Q(Agent_Q):
         super().__init__(env)
         self.q_func = SMDPQTable(env.get_movability_map(), macros)
 
-		self.macros = macros
+        self.macros = macros
         self.num_macros = len(self.macros)
         self.current_macro = None
         for i, mac in enumerate(self.macros):

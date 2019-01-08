@@ -12,6 +12,11 @@ class ReplayBuffer(object):
 
         self.buffer.append((ep_id, state, action, reward, next_state, done))
 
+    def push_policy(self, ep_id, state, action, next_state):
+        state = state
+        next_state = next_state
+        self.buffer.append((ep_id, state, action, next_state))
+
     def sample(self, batch_size):
         ep_id, state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
         return ep_id, np.concatenate(state), action, reward, np.concatenate(next_state), done
@@ -69,3 +74,20 @@ def greedy_eval(env, agent, gamma, max_steps, log_episodes):
     sd_rewards = np.std(rewards) if len(rewards) > 0 else 0
 
     return avg_steps, sd_steps, avg_rewards, sd_rewards, successes/log_episodes
+
+
+def get_rollout_policy(env, agent, max_steps):
+    cur_state = env.reset()
+
+    er_buffer_temp = ReplayBuffer(max_steps)
+
+    for s in range(max_steps):
+        action = agent.greedy_action(cur_state)
+        next_state, reward, done, _ = env.step(action)
+
+        er_buffer_temp.push_policy(s, cur_state, action, next_state)
+
+        cur_state = next_state
+        if done: break
+
+    return er_buffer_temp.buffer
