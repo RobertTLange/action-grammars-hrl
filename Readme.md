@@ -15,7 +15,7 @@ Implementation of ICML 2019 submitted paper.
     * [x] Add logging module
     * [x] Write base Macro module
     * [x] Write function that checks executability of macro
-    * [ ] Check what is wrong with rollout function
+    * [x] Check what is wrong with rollout function
     * [ ] Macro Q-Learner
 * [ ] Towers of Hanoi Experiments
     * [ ] Implement better baselines

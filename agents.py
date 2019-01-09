@@ -106,17 +106,6 @@ class SMDP_Agent_Q(Agent_Q):
         for i, mac in enumerate(self.macros):
             mac.identifier = i
 
-    def pick_macro_greedy_epsilon(self, state, eps=0.0):
-        valid_options = [i for i in np.arange(self.num_options) if self.options[i].check_validity(state)]
-        all_qs        = self.q_func(state)
-        valid_qs      = [all_qs[i] for i in valid_options]
-        roll = np.random.random()
-        if roll <= eps:
-            self.current_option = np.random.choice(valid_options)
-        else:
-            self.current_option = valid_options[np.argmax(valid_qs)]
-        return self.options[self.current_option]
-
 
 class Macro():
     def __init__(self, env, action_seq):
@@ -128,7 +117,7 @@ class Macro():
             self.action_seq = self.convert_string()
 
         self.current_time = 0
-        self.activity = False
+        self.active = False
 
     def convert_string(self):
         macro_actions = []
@@ -141,12 +130,14 @@ class Macro():
         self.current_time += 1
 
         if self.current_time == self.macro_len:
-            self.activity = False
+            self.active = False
+            self.current_time = 0
 
-        if env.move_allowed(action_to_move[act_temp]):
+        if self.env.move_allowed(action_to_move[act_temp]):
             return act_temp
         else:
-            self.activity = False
+            self.active = False
+            self.current_time = 0
             return None
 
 
