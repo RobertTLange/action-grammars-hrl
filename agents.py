@@ -150,7 +150,6 @@ class Macro():
             return None
 
 
-
 letter_to_action = {"a": 0, "b": 1, "c": 2,
                     "d": 3, "e": 4, "f": 5}
 

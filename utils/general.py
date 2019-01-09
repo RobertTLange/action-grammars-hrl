@@ -76,7 +76,11 @@ def greedy_eval(env, agent, gamma, max_steps, log_episodes):
     return avg_steps, sd_steps, avg_rewards, sd_rewards, successes/log_episodes
 
 
-def get_rollout_policy(env, agent, max_steps):
+action_to_letter = {0: "a", 1: "b", 2: "c",
+                    3: "d", 4: "e", 5: "f"}
+
+
+def get_rollout_policy(env, agent, max_steps, grammar=False):
     cur_state = env.reset()
 
     er_buffer_temp = ReplayBuffer(max_steps)
@@ -90,4 +94,11 @@ def get_rollout_policy(env, agent, max_steps):
         cur_state = next_state
         if done: break
 
-    return er_buffer_temp.buffer
+    if grammar:
+        sentence = []
+        for i in range(len(er_buffer_temp.buffer)):
+            action = er_buffer_temp.buffer[i][2]
+            sentence.append(action_to_letter[action])
+        return ''.join(sentence)
+    else:
+        return er_buffer_temp.buffer
