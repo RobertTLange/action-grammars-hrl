@@ -7,35 +7,28 @@ CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
                   '#f781bf', '#a65628', '#984ea3',
                   '#999999', '#e41a1c', '#dede00']
 
-def moving_average(a, n=3):
-    """
-    Input I: Time series and smoothing degree
-    Output: Computes moving average for a time series (rets/steps) and order n
-    """
-    ret = np.cumsum(a, dtype=float)
-    ret[n:] = ret[n:] - ret[:-n]
-    return ret / n
-
-
-def smooth_results(avg_steps, sd_steps, avg_ret, sd_ret, smooth_degree):
-    """
-    Output: Computes moving average for different cols of results array
-    """
-    sm_avg_steps = moving_average(avg_steps, smooth_degree)
-    sm_sd_steps = moving_average(sd_steps, smooth_degree)
-    sm_avg_ret = moving_average(avg_ret, smooth_degree)
-    sm_sd_ret = moving_average(sd_ret, smooth_degree)
-    return sm_avg_steps, sm_sd_steps, sm_avg_ret, sm_sd_ret
+def smooth(ts, windowSize):
+    # Perform smoothed moving average with specified window to time series
+    ts_MA = []
+    weights = np.repeat(1.0, windowSize) / windowSize
+    if type(ts) != list:
+        ts = list(ts)
+    for i in range(len(ts)):
+        ts_MA.append(np.convolve(ts[i], weights, 'valid'))
+    return ts_MA
 
 
 def plot_learning(episodes, mean_ts, sd_ts, smooth_degree, title, label_temp):
-    mean_ts = moving_average(mean_ts, smooth_degree)
-    sd_ts = moving_average(sd_ts, smooth_degree)
-    plt.plot(episodes, mean_ts, CB_color_cycle[0], label=label_temp)
-    plt.plot(episodes, mean_ts - 2*sd_ts, CB_color_cycle[0], alpha=0.25)
-    plt.plot(episodes, mean_ts - 2*sd_ts, CB_color_cycle[0], alpha=0.25)
-    plt.fill_between(episodes, mean_ts - 2*sd_ts, mean_ts + 2*sd_ts,
-                          facecolor=CB_color_cycle[0], alpha=0.25)
+    mean_ts = smooth(mean_ts, smooth_degree)
+    sd_ts = smooth(sd_ts, smooth_degree)
+
+    for i in range(len(mean_ts)):
+        plt.plot(episodes[smooth_degree-1:], mean_ts[i], CB_color_cycle[i], label=label_temp[i])
+        plt.plot(episodes[smooth_degree-1:], mean_ts[i] - 2*sd_ts[i], CB_color_cycle[i], alpha=0.25)
+        plt.plot(episodes[smooth_degree-1:], mean_ts[i] - 2*sd_ts[i], CB_color_cycle[i], alpha=0.25)
+        plt.fill_between(episodes[smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
+                         mean_ts[i] + 2*sd_ts[i],
+                         facecolor=CB_color_cycle[i], alpha=0.25)
     plt.legend(loc=7)
     plt.title(title)
     return
@@ -52,9 +45,9 @@ def plot_all_learning(its, steps, sd_steps, rew, sd_rew,
         plt.subplot(len(its), 2, counter-1)
         plot_learning(its[i], steps[i], sd_steps[i],
                       smooth_degree, sub_titles[counter-2],
-                      labels[i])
+                      labels)
 
         plt.subplot(len(its), 2, counter)
         plot_learning(its[i], rew[i], sd_rew[i],
                       smooth_degree, sub_titles[counter-1],
-                      labels[i])
+                      labels)

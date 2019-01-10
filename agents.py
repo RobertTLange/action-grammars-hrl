@@ -107,6 +107,38 @@ class SMDP_Agent_Q(Agent_Q):
             mac.identifier = i
 
 
+class Online_SMDP_Agent_Q(SMDP_Agent_Q):
+    def __init__(self, env, macros):
+        super().__init__(env)
+        self.q_func = SMDPQTable(env.get_movability_map(), macros)
+
+        self.macros = macros
+        self.num_macros = len(self.macros)
+        self.current_macro = None
+        for i, mac in enumerate(self.macros):
+            mac.identifier = i
+
+
+class GrammarBuffer(object):
+    # Object similar to Replay buffer that stores tabular values of macro
+    def __init__(self, capacity):
+        self.buffer = {}
+
+    def push(self, grammar_macro, macro_values):
+        state = state
+        next_state = next_state
+
+        if self.record_macros:
+            self.buffer.append((ep_id, state, action, macro,
+                                reward, next_state, done))
+        else:
+            self.buffer.append((ep_id, state, action,
+                                reward, next_state, done))
+
+    def retrieve(self, grammar_macro):
+        return
+
+
 class Macro():
     def __init__(self, env, action_seq):
         self.action_seq = action_seq

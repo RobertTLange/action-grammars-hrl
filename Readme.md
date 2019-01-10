@@ -16,7 +16,7 @@ Implementation of ICML 2019 submitted paper.
     * [x] Write base Macro module
     * [x] Write function that checks executability of macro
     * [x] Check what is wrong with rollout function
-    * [ ] Macro Q-Learner
+    * [x] Macro Q-Learner
 * [ ] Towers of Hanoi Experiments
     * [ ] Implement better baselines
     * [ ] Investigate transfer learning via grammars
