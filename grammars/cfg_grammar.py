@@ -9,7 +9,7 @@ import numpy as np
 from collections import Counter
 from utils import *
 
-base_dir = os.getcwd()
+base_dir = os.getcwd() + "/grammars"
 trace_dir = base_dir + "/traces/"
 seq_dir = base_dir + "/sequitur/"
 lexis_dir = base_dir + "/Lexis/"
@@ -87,6 +87,7 @@ class run_grammar():
         # Rename all nonterminals by numbers and remove spaces
         rename_list = range(1, len(nonterminals))
         rename_dict = dict(zip(nonterminals, rename_list))
+        print(productions)
         productions[0] = productions[0].replace("\\n", "")
         # Add awkward "-" to be able to differentiate when working with >9 prod
         for i, prod in enumerate(productions):
@@ -176,6 +177,7 @@ def get_macros(no_macros, sentence, num_primitives, g_type="sequitur", k=2):
 
     with open(trace_dir + temp, "w") as myfile:
         myfile.write(sentence)
+
     Grammar = run_grammar(trace_dir + temp, k)
     if g_type == "sequitur":
         os.chdir(seq_dir)
@@ -203,5 +205,5 @@ def get_macros(no_macros, sentence, num_primitives, g_type="sequitur", k=2):
         macros = Grammar.flat_productions[1:]
 
     os.remove(trace_dir + temp) if os.path.exists(trace_dir + temp) else None
-
+    os.chdir(base_dir)
     return macros

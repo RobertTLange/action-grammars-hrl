@@ -17,6 +17,7 @@ Implementation of ICML 2019 submitted paper.
     * [x] Write function that checks executability of macro
     * [x] Check what is wrong with rollout function
     * [x] Macro Q-Learner
+    * [ ] Set of k-Sequitur CFG inference
 * [ ] Towers of Hanoi Experiments
     * [ ] Implement better baselines
     * [ ] Investigate transfer learning via grammars
@@ -36,38 +37,61 @@ Action Grammars
 +- workspace.ipynb: Main workspace notebook - Execute for replication
 ```
 
-## How to use this code
-1. Clone the repo.
+## (Basic) How to use this code
+1. Clone the repo, create/activate venv, install dependencies
 ```
-git clone https://github.com/RobertTLange/action-grammars-hrl && cd action-grammars-hrl
-```
-2. Create a virtual environment (optional but recommended).
-```
+git clone https://github.com/RobertTLange/action-grammars-hrl
+cd action-grammars-hrl
 virtualenv -p python AG
-```
-Activate the env (the following command works on Linux, other operating systems might differ):
-```
 source AG/bin/activate
-```
-3a. Install all dependencies via pip:
-```
 pip install -r requirements.txt
 ```
-3b. Install all remaining dependencies:
+2. Install all remaining dependencies:
 ```
 source setup.bash
 ```
-4. Run the main notebook:
+3. Run the main notebook:
 ```
 jupyter notebook workspace.ipynb
 ```
 
-## Jupyter Env Setup
+## (Advanced) Jupyter Env Setup and Setup on AWS Virtual Machine Instance
+
+* Create the environment, activate it and install dependencies
+```
 conda create --name AG python=3.6 --no-default-packages
 source activate AG
-pip install ipykernel
+pip install -r requirements.txt --quiet
+```
+Add ipykernel to listed env kernels, Launch notebook silent and open port
+```
 python -m ipykernel install --user --name AG --display-name "Python3 (AG)"
-pip install jupyterlab
+jupyter notebook --no-browser --port=8080
+```
+In new terminal window on local machine rewire port and listen
+```
+ssh -N -f -L localhost:2411:localhost:8080 MACHINE_IP_ADDRESS
+```
+In Browser open localhost port and start working on the notebook of choice.
+If required copy paste the token/set a password.
+```
+localhost:2411
+```
 
+## Jupyter Env Cleanup
 conda env remove -n AG
 jupyter kernelspec uninstall AG
+
+
+
+
+* Create SSH tunnel in local terminal
+
+```
+```
+
+* Go to browser and enter the token when asked
+
+```
+
+```
