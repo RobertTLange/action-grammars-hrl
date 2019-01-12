@@ -2,8 +2,10 @@ import time
 import gym
 import gym_hanoi
 import numpy as np
-from agents import Agent_Q, SMDP_Agent_Q, Macro
 from collections import deque
+
+from agents.q_agent import Agent_Q
+from agents.smdp_q_agent import SMDP_Agent_Q, Macro
 
 
 class ReplayBuffer(object):

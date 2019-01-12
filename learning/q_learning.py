@@ -1,5 +1,5 @@
 import numpy as np
-from agents import QTable
+from agents.q_agent import QTable
 from utils.general import ReplayBuffer, greedy_eval
 
 
@@ -20,7 +20,7 @@ def q_learning_update(gamma, alpha, lambd, q_func, eligibility,
     eligibility(cur_state)[action] += 1
 
     td_err = target - q_func(cur_state)[action]
-    Q_new = q_func.table + alpha* td_err * eligibility.table
+    Q_new = q_func.table + alpha * td_err * eligibility.table
 
     q_func.update_all(Q_new)
     return eligibility, td_err
@@ -57,10 +57,12 @@ def q_learning(env, agent, num_episodes, max_steps,
             greedy_choice = agent.greedy_action(next_state)
 
             # Update value function
-            eligibility, tde = q_learning_update(gamma, alpha, lambd, agent.q_func,
-                                                 eligibility, state, action,
-                                                 next_state, reward, done, stp,
-                                                 old_greedy_choice, old_action, old_state)
+            eligibility, tde = q_learning_update(gamma, alpha, lambd,
+                                                 agent.q_func, eligibility,
+                                                 state, action, next_state,
+                                                 reward, done, stp,
+                                                 old_greedy_choice, old_action,
+                                                 old_state)
 
             # Extend replay buffer
             er_buffer.push(ep_id, state, action, reward, next_state, done)
@@ -76,12 +78,13 @@ def q_learning(env, agent, num_episodes, max_steps,
             tot_td += tde
             rewards.append(reward)
 
-            if done: break
+            if done:
+                break
 
         if ep_id % log_freq == 0:
             avg_steps, sd_steps, avg_ret, sd_ret, success_rate = greedy_eval(env, agent, gamma,
                                                                              max_steps, log_episodes)
-            hist[log_counter,:] = np.array([ep_id, avg_steps, sd_steps,
+            hist[log_counter, :] = np.array([ep_id, avg_steps, sd_steps,
                                             avg_ret, sd_ret, success_rate])
             log_counter += 1
 

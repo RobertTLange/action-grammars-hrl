@@ -1,5 +1,5 @@
 import numpy as np
-from agents import QTable
+from agents.q_agent import QTable
 from utils.general import ReplayBuffer, greedy_eval, discounted_return, macro_step
 
 

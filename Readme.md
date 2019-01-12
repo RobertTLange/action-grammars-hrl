@@ -6,10 +6,7 @@ Implementation of ICML 2019 submitted paper.
 
 ## DONE:
 * [x] Create env, repo and base structure
-
-
-## TODO - CODING:
-* [ ] Write setup script
+* [x] Write setup script
 * [ ] Restructure Towers of Hanoi setup (State: Final MSc Project)
     * [x] Base Q-Learner
     * [x] Add logging module
@@ -17,7 +14,13 @@ Implementation of ICML 2019 submitted paper.
     * [x] Write function that checks executability of macro
     * [x] Check what is wrong with rollout function
     * [x] Macro Q-Learner
-    * [ ] Set of k-Sequitur CFG inference
+    * [x] Set of k-Sequitur CFG inference
+
+## TODO - CODING:
+
+* [ ] Restructure Towers of Hanoi setup (State: Final MSc Project)
+    * [ ] Implement logger of results
+    * [ ] Implement parallelization
 * [ ] Towers of Hanoi Experiments
     * [ ] Implement better baselines
     * [ ] Investigate transfer learning via grammars
@@ -46,7 +49,7 @@ virtualenv -p python AG
 source AG/bin/activate
 pip install -r requirements.txt
 ```
-2. Install all remaining dependencies:
+2. Install all remaining dependencies (Hanoi Env, Sequitur, Lexis):
 ```
 source setup.bash
 ```
