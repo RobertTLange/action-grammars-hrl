@@ -7,6 +7,7 @@ CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
                   '#f781bf', '#a65628', '#984ea3',
                   '#999999', '#e41a1c', '#dede00']
 
+cols_to_plot = ["#B31329","#1386A0"]
 
 def smooth(ts, windowSize):
     # Perform smoothed moving average with specified window to time series
@@ -19,22 +20,38 @@ def smooth(ts, windowSize):
     return ts_MA
 
 
-def plot_learning(episodes, mean_ts, sd_ts, smooth_degree, title, label_temp):
+def plot_learning(episodes, mean_ts, sd_ts, smooth_degree,
+                  title, label_temp, save_fname=None):
     mean_ts = smooth(mean_ts, smooth_degree)
     sd_ts = smooth(sd_ts, smooth_degree)
 
+    fig = plt.figure(figsize=(10, 10))
+    plot = fig.add_subplot(111)
+
     for i in range(len(mean_ts)):
-        plt.plot(episodes[smooth_degree-1:], mean_ts[i], CB_color_cycle[i],
-                 label=label_temp[i])
+        plt.plot(episodes[smooth_degree-1:], mean_ts[i], cols_to_plot[i],
+                 label=label_temp[i], linewidth=3)
         plt.plot(episodes[smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
-                 CB_color_cycle[i], alpha=0.25)
+                 cols_to_plot[i], alpha=0.25, linewidth=2)
         plt.plot(episodes[smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
-                 CB_color_cycle[i], alpha=0.25)
+                 cols_to_plot[i], alpha=0.25, linewidth=2)
         plt.fill_between(episodes[smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
                          mean_ts[i] + 2*sd_ts[i],
-                         facecolor=CB_color_cycle[i], alpha=0.25)
-    plt.legend(loc=7)
-    plt.title(title)
+                         facecolor=cols_to_plot[i], alpha=0.25)
+
+    plt.legend(loc=7, fontsize=20)
+    plt.title(title, fontsize=25)
+    plt.xlabel("Episodes", fontsize=20)
+    plt.ylabel("Steps until Goal", fontsize=20)
+
+    #plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
+    plot.tick_params(axis='both', which='major', labelsize=20)
+    plot.tick_params(axis='both', which='minor', labelsize=8)
+
+    if save_fname is not None:
+        plt.savefig(save_fname, dpi=900)
+        print("Saved figure to {}".format(save_fname))
     return
 
 

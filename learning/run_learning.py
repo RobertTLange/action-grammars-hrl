@@ -26,15 +26,15 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
 
         if l_type == "Q-Learning":
             agent = Agent_Q(env)
-            hist, er_buffer = q_learning(env, agent, num_episodes, max_steps,
-                                         **params, log_freq=log_freq,
+            hist = q_learning(env, agent, num_episodes, max_steps,
+                               **params, log_freq=log_freq,
                                          log_episodes=log_episodes,
                                          verbose=False)
 
         elif l_type == "Imitation-SMDP-Q-Learning":
             macros = get_optimal_macros(env, num_disks, "Sequitur")
             agent = SMDP_Agent_Q(env, macros)
-            hist, er_buffer = smdp_q_learning(env, agent, num_episodes,
+            hist = smdp_q_learning(env, agent, num_episodes,
                                               max_steps, **params,
                                               log_freq=log_freq,
                                               log_episodes=log_episodes,

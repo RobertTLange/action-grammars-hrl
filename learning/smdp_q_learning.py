@@ -96,4 +96,4 @@ def smdp_q_learning(env, agent, num_episodes, max_steps,
                 print(log_template.format(ep_id + 1, avg_steps, sd_steps,
                                           avg_ret, sd_steps, success_rate))
 
-    return hist, er_buffer
+    return hist
