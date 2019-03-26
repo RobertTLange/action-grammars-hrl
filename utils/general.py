@@ -146,7 +146,11 @@ def get_rollout_policy(env, agent, max_steps,
 
     for s in range(max_steps):
         action = agent.greedy_action(cur_state)
-        next_state, reward, done, _ = env.step(action)
+        if action > 5:
+            next_state, reward, done, _ = macro_step(action, cur_state, agent,
+                                                     env, None, 0)
+        else:
+            next_state, reward, done, _ = env.step(action)
 
         er_buffer_temp.push_policy(s, cur_state, action, next_state)
 
@@ -157,7 +161,13 @@ def get_rollout_policy(env, agent, max_steps,
         sentence = []
         for i in range(len(er_buffer_temp.buffer)):
             action = er_buffer_temp.buffer[i][2]
-            sentence.append(action_to_letter[action])
+            if action > 5:
+                macro_id = action-6
+                print(macro_id, len(agent.macros))
+                for j in range(len(agent.macros[macro_id].action_seq)):
+                    sentence.append(action_to_letter[agent.macros[macro_id].action_seq[j]])
+            else:
+                sentence.append(action_to_letter[action])
         return ''.join(sentence)
     else:
         return er_buffer_temp.buffer
