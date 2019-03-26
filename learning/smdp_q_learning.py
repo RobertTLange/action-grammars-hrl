@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from agents.q_agent import QTable
 from utils.general import ReplayBuffer, greedy_eval, discounted_return, macro_step
@@ -32,7 +33,7 @@ def smdp_q_learning(env, agent, num_episodes, max_steps,
 
     log_template = "Ep: {:>2} | Avg/Std Steps: {:.2f}/{:.2f} | Avg/Std Ret: {:.2f}/{:.2f} | Success R: {:.2f}"
     log_counter = 0
-    hist = np.zeros((int(num_episodes/log_freq), 6))
+    hist = np.zeros((math.ceil(num_episodes/log_freq), 6))
 
     # Init Replay Buffer
     er_buffer = ReplayBuffer(num_episodes*max_steps, record_macros=True)
@@ -96,4 +97,4 @@ def smdp_q_learning(env, agent, num_episodes, max_steps,
                 print(log_template.format(ep_id + 1, avg_steps, sd_steps,
                                           avg_ret, sd_steps, success_rate))
 
-    return hist
+    return hist, er_buffer

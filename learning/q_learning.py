@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from agents.q_agent import QTable
 from utils.general import ReplayBuffer, greedy_eval
@@ -32,7 +33,7 @@ def q_learning(env, agent, num_episodes, max_steps,
 
     log_template = "Ep: {:>2} | Avg/Std Steps: {:.2f}/{:.2f} | Avg/Std Ret: {:.2f}/{:.2f} | Success R: {:.2f}"
     log_counter = 0
-    hist = np.zeros((int(num_episodes/log_freq), 6))
+    hist = np.zeros((math.ceil(num_episodes/log_freq), 6))
 
     # Init Replay Buffer
     er_buffer = ReplayBuffer(num_episodes*max_steps)
@@ -84,6 +85,7 @@ def q_learning(env, agent, num_episodes, max_steps,
         if ep_id % log_freq == 0:
             avg_steps, sd_steps, avg_ret, sd_ret, success_rate = greedy_eval(env, agent, gamma,
                                                                              max_steps, log_episodes)
+
             hist[log_counter, :] = np.array([ep_id, avg_steps, sd_steps,
                                             avg_ret, sd_ret, success_rate])
             log_counter += 1

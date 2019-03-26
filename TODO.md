@@ -13,6 +13,7 @@
     * [x] Check what is wrong with rollout function
     * [x] Macro Q-Learner
     * [x] Set of k-Sequitur CFG inference
+    * [x] Implement Transfer Learning
 
 ## TODO - CODING:
 
@@ -22,7 +23,8 @@
 * [ ] Towers of Hanoi Experiments
     * [ ] Implement better baselines
     * [ ] Investigate transfer learning via grammars
-    * [ ] Implement grammar dictionary similiar to ER buffer
+    * [ ] Implement grammar dictionary similar to ER buffer
+    * [ ] Implement Online grammar inference
 
 
 ## TODO - PAPER:

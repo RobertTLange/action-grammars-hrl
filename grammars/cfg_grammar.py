@@ -9,7 +9,8 @@ import numpy as np
 from collections import Counter
 from utils import *
 
-base_dir = os.getcwd() + "/grammars"
+original_dir = os.getcwd()
+base_dir =  original_dir + "/grammars"
 trace_dir = base_dir + "/traces/"
 seq_dir = base_dir + "/sequitur/"
 lexis_dir = base_dir + "/Lexis/"
@@ -205,5 +206,5 @@ def get_macros(no_macros, sentence, num_primitives, g_type="sequitur", k=2):
         macros = Grammar.flat_productions[1:]
 
     os.remove(trace_dir + temp) if os.path.exists(trace_dir + temp) else None
-    os.chdir(base_dir)
+    os.chdir(original_dir)
     return macros

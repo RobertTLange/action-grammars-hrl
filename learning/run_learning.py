@@ -14,7 +14,8 @@ from utils.general import get_optimal_macros
 
 
 def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
-                 log_episodes, log_freq, save_fname=None):
+                 log_episodes, log_freq, transfer_distance=None,
+                 save_fname=None):
     its, steps, sd_steps, rew, sd_rew = [], [], [], [], []
 
     for i in range(num_times):
@@ -34,11 +35,23 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
         elif l_type == "Imitation-SMDP-Q-Learning":
             macros = get_optimal_macros(env, num_disks, "Sequitur")
             agent = SMDP_Agent_Q(env, macros)
-            hist = smdp_q_learning(env, agent, num_episodes,
+            hist, er_buffer = smdp_q_learning(env, agent, num_episodes,
                                               max_steps, **params,
                                               log_freq=log_freq,
                                               log_episodes=log_episodes,
                                               verbose=False)
+
+        elif l_type == "Transfer-SMDP-Q-Learning":
+            macros = get_optimal_macros(env,
+                                        num_disks - transfer_distance,
+                                        "Sequitur")
+            agent = SMDP_Agent_Q(env, macros)
+            hist, er_buffer = smdp_q_learning(env, agent, num_episodes,
+                                              max_steps, **params,
+                                              log_freq=log_freq,
+                                              log_episodes=log_episodes,
+                                              verbose=False)
+
 
         # Process results and append
         its_t, steps_t, sd_steps_t, rew_t, sd_rew_t = (hist[:, 0], hist[:, 1],
@@ -63,5 +76,12 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
 
     if save_fname is not None:
         out = np.array([its, steps, sd_steps, rew, sd_rew])
-        np.savetxt(save_fname, out)
-    return env, agent, its, steps, sd_steps, rew, sd_rew
+        np.savetxt(save_fname, out.T)
+        print("Outfiled the results to {}.".format(save_fname))
+
+    stats = {"iterations": its,
+             "mean_steps": steps,
+             "sd_steps": sd_steps,
+             "mean_rew": rew,
+             "sd_rew": sd_rew}
+    return env, agent, stats
