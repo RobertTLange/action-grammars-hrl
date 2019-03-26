@@ -27,8 +27,8 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
 
         if l_type == "Q-Learning":
             agent = Agent_Q(env)
-            hist = q_learning(env, agent, num_episodes, max_steps,
-                               **params, log_freq=log_freq,
+            hist, er_buffer = q_learning(env, agent, num_episodes, max_steps,
+                                         **params, log_freq=log_freq,
                                          log_episodes=log_episodes,
                                          verbose=False)
 
@@ -51,7 +51,6 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
                                               log_freq=log_freq,
                                               log_episodes=log_episodes,
                                               verbose=False)
-
 
         # Process results and append
         its_t, steps_t, sd_steps_t, rew_t, sd_rew_t = (hist[:, 0], hist[:, 1],

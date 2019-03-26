@@ -88,7 +88,7 @@ class run_grammar():
         # Rename all nonterminals by numbers and remove spaces
         rename_list = range(1, len(nonterminals))
         rename_dict = dict(zip(nonterminals, rename_list))
-        print(productions)
+
         productions[0] = productions[0].replace("\\n", "")
         # Add awkward "-" to be able to differentiate when working with >9 prod
         for i, prod in enumerate(productions):

@@ -80,18 +80,22 @@ def get_optimal_macros(env, N, cfg_type):
                     7: ['bafbcdbafecfbafbcdbcfecdbafbcdb', 'fec',
                         'bafbcdb', 'fecfbafecdbcfec']}
 
-    macros = []
     if cfg_type == "Sequitur":
-        for i in range(len(seq_macros[N])):
-            macros.append(Macro(env, seq_macros[N][i]))
+        macros = get_macros_from_productions(env, seq_macros[N])
         return macros
     elif cfg_type == "G-Lexis":
-        for i in range(len(lexis_macros[N])):
-            macros.append(Macro(env, lexis_macros[N][i]))
+        macros = get_macros_from_productions(env,
+                                             lexis_macros[N])
         return macros
     else:
         raise ValueError("Provide a valid Context-Free Grammar")
 
+
+def get_macros_from_productions(env, productions):
+    macros = []
+    for i in range(len(productions)):
+        macros.append(Macro(env, productions[i]))
+    return macros
 
 def greedy_eval(env, agent, gamma, max_steps, log_episodes):
     rewards = []

@@ -39,12 +39,10 @@ def plot_learning(episodes, mean_ts, sd_ts, smooth_degree,
                          mean_ts[i] + 2*sd_ts[i],
                          facecolor=cols_to_plot[i], alpha=0.25)
 
-    plt.legend(loc=7, fontsize=20)
+    plt.legend(loc="upper right", fontsize=20)
     plt.title(title, fontsize=25)
     plt.xlabel("Episodes", fontsize=20)
     plt.ylabel("Steps until Goal", fontsize=20)
-
-    #plt.tight_layout(rect=[0, 0.03, 1, 0.95])
 
     plot.tick_params(axis='both', which='major', labelsize=20)
     plot.tick_params(axis='both', which='minor', labelsize=8)

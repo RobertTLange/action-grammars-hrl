@@ -1,8 +1,13 @@
 import math
 import numpy as np
-from agents.q_agent import QTable
-from utils.general import ReplayBuffer, greedy_eval, discounted_return, macro_step
 
+from learning.learning_params import *
+from learning.q_learning import  q_learning
+
+from grammars.cfg_grammar import *
+
+from agents.q_agent import QTable
+from utils.general import *
 
 def smdp_q_learning_update(gamma, alpha, lambd, q_func, eligibility,
                            cur_state, action, next_state, reward, done, stp,
@@ -98,3 +103,34 @@ def smdp_q_learning(env, agent, num_episodes, max_steps,
                                           avg_ret, sd_steps, success_rate))
 
     return hist, er_buffer
+
+
+def smdp_q_online_learning(env, agent, init_q_eps, inter_update_eps,
+                           num_grammar_updates, max_steps,
+                           gamma, alpha, lambd, epsilon,
+                           log_freq, log_episodes, verbose):
+    # Run initial Q-Learning for Hot start
+    params = learning_parameters(l_type="Q-Learning")
+    hist_full, er_buffer = q_learning(env, agent, init_q_eps, max_steps,
+                                      **params, log_freq=log_freq,
+                                      log_episodes=log_episodes, verbose=verbose)
+
+    for update_id in range(num_grammar_updates):
+        # Extract first grammar/macro productions
+        sentence = get_rollout_policy(env, agent, max_steps, grammar=True)
+        productions = get_macros("all", sentence, num_primitives=6,
+                                 g_type="sequitur", k=2)
+        macros = get_macros_from_productions(env, productions)
+        # Run SMDP-Q-Learning Phase with new macros
+        agent = SMDP_Agent_Q(env, macros)
+        params = learning_parameters(l_type="Online-SMDP-Q-Learning")
+        hist, er_buffer = smdp_q_learning(env, agent, inter_update_eps,
+                                          max_steps, **params,
+                                          log_freq=log_freq,
+                                          log_episodes=log_episodes,
+                                          verbose=verbose)
+
+        # Stack the performance stat arrays after correcting the episodes
+        hist[:, 0] += update_id*inter_update_eps + init_q_eps
+        hist_full = np.vstack((hist_full, hist))
+    return hist_full
