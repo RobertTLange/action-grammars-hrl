@@ -7,7 +7,7 @@ from agents.q_agent import Agent_Q
 from agents.smdp_q_agent import SMDP_Agent_Q, Macro
 
 from learning.q_learning import q_learning
-from learning.smdp_q_learning import smdp_q_learning
+from learning.smdp_q_learning import smdp_q_learning, smdp_q_online_learning
 from learning.learning_params import learning_parameters
 
 from utils.general import get_optimal_macros
@@ -52,6 +52,14 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
                                               log_episodes=log_episodes,
                                               verbose=False)
 
+        elif l_type == "Online-SMDP-Q-Learning":
+            hist = smdp_q_online_learning(env, **params,
+                                          max_steps=max_steps,
+                                          log_freq=log_freq,
+                                          log_episodes=log_episodes,
+                                          verbose=False)
+
+
         # Process results and append
         its_t, steps_t, sd_steps_t, rew_t, sd_rew_t = (hist[:, 0], hist[:, 1],
                                                        hist[:, 2], hist[:, 3],
@@ -83,4 +91,4 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
              "sd_steps": sd_steps,
              "mean_rew": rew,
              "sd_rew": sd_rew}
-    return env, agent, stats
+    return stats

@@ -6,7 +6,7 @@ from learning.q_learning import  q_learning
 
 from grammars.cfg_grammar import *
 
-from agents.q_agent import QTable
+from agents.q_agent import QTable, Agent_Q
 from utils.general import *
 
 def smdp_q_learning_update(gamma, alpha, lambd, q_func, eligibility,
@@ -105,11 +105,12 @@ def smdp_q_learning(env, agent, num_episodes, max_steps,
     return hist, er_buffer
 
 
-def smdp_q_online_learning(env, agent, init_q_eps, inter_update_eps,
+def smdp_q_online_learning(env, init_q_eps, inter_update_eps,
                            num_grammar_updates, max_steps,
                            gamma, alpha, lambd, epsilon,
                            log_freq, log_episodes, verbose):
     # Run initial Q-Learning for Hot start
+    agent = Agent_Q(env)
     params = learning_parameters(l_type="Q-Learning")
     hist_full, er_buffer = q_learning(env, agent, init_q_eps, max_steps,
                                       **params, log_freq=log_freq,
@@ -123,7 +124,7 @@ def smdp_q_online_learning(env, agent, init_q_eps, inter_update_eps,
         macros = get_macros_from_productions(env, productions)
         # Run SMDP-Q-Learning Phase with new macros
         agent = SMDP_Agent_Q(env, macros)
-        params = learning_parameters(l_type="Online-SMDP-Q-Learning")
+        params = learning_parameters(l_type="Imitation-SMDP-Q-Learning")
         hist, er_buffer = smdp_q_learning(env, agent, inter_update_eps,
                                           max_steps, **params,
                                           log_freq=log_freq,

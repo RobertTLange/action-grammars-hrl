@@ -21,7 +21,8 @@ def smooth(ts, windowSize):
 
 
 def plot_learning(episodes, mean_ts, sd_ts, smooth_degree,
-                  title, label_temp, save_fname=None):
+                  title, label_temp, grammar_update_ind=None,
+                  save_fname=None):
     mean_ts = smooth(mean_ts, smooth_degree)
     sd_ts = smooth(sd_ts, smooth_degree)
 
@@ -29,19 +30,27 @@ def plot_learning(episodes, mean_ts, sd_ts, smooth_degree,
     plot = fig.add_subplot(111)
 
     for i in range(len(mean_ts)):
-        plt.plot(episodes[smooth_degree-1:], mean_ts[i], cols_to_plot[i],
+        plt.plot(episodes[i][smooth_degree-1:], mean_ts[i], cols_to_plot[i],
                  label=label_temp[i], linewidth=3)
-        plt.plot(episodes[smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
+        plt.plot(episodes[i][smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
                  cols_to_plot[i], alpha=0.25, linewidth=2)
-        plt.plot(episodes[smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
+        plt.plot(episodes[i][smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
                  cols_to_plot[i], alpha=0.25, linewidth=2)
-        plt.fill_between(episodes[smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
+        plt.fill_between(episodes[i][smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
                          mean_ts[i] + 2*sd_ts[i],
                          facecolor=cols_to_plot[i], alpha=0.25)
 
+    if grammar_update_ind is not None:
+        for i, xc in enumerate(grammar_update_ind):
+            if i == len(grammar_update_ind) - 1:
+                plt.axvline(x=xc, linestyle='--', alpha=0.7,
+                             label="Grammar Update")
+            else:
+                plt.axvline(x=xc, linestyle='--', alpha=0.7)
+
     plt.legend(loc="upper right", fontsize=20)
     plt.title(title, fontsize=25)
-    plt.xlabel("Episodes", fontsize=20)
+    plt.xlabel("Updates", fontsize=20)
     plt.ylabel("Steps until Goal", fontsize=20)
 
     plot.tick_params(axis='both', which='major', labelsize=20)

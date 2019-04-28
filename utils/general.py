@@ -107,7 +107,7 @@ def greedy_eval(env, agent, gamma, max_steps, log_episodes):
         reward_temp = []
         stp_temp = 0
 
-        for s in range(max_steps):
+        while stp_temp <= max_steps:
             action = agent.greedy_action(cur_state)
             if action > 5:
                 next_state, reward, done, _ = macro_step(action, cur_state, agent,
@@ -163,7 +163,6 @@ def get_rollout_policy(env, agent, max_steps,
             action = er_buffer_temp.buffer[i][2]
             if action > 5:
                 macro_id = action-6
-                print(macro_id, len(agent.macros))
                 for j in range(len(agent.macros[macro_id].action_seq)):
                     sentence.append(action_to_letter[agent.macros[macro_id].action_seq[j]])
             else:
