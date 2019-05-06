@@ -50,7 +50,7 @@ def plot_learning(episodes, mean_ts, sd_ts, smooth_degree,
 
     plt.legend(loc="upper right", fontsize=20)
     plt.title(title, fontsize=25)
-    plt.xlabel("Updates", fontsize=20)
+    plt.xlabel("Episodes", fontsize=20)
     plt.ylabel("Steps until Goal", fontsize=20)
 
     plot.tick_params(axis='both', which='major', labelsize=20)

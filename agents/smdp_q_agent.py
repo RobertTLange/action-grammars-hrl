@@ -1,5 +1,6 @@
 import numpy as np
 import itertools
+import copy
 from agents.q_agent import Agent_Q
 
 
@@ -26,7 +27,7 @@ class SMDPQTable():
         self.table = Q
 
     def gen_valid_table(self, q_table, macros):
-
+        # Add columns for new macros to Q-Table and check if first action is valid
         dims = q_table.shape
         dims_temp = list(dims)
         dims_temp[-1] = len(macros)
@@ -49,19 +50,8 @@ class SMDPQTable():
 class SMDP_Agent_Q(Agent_Q):
     def __init__(self, env, macros):
         super().__init__(env)
-        self.q_func = SMDPQTable(env.get_movability_map(), macros)
-
-        self.macros = macros
-        self.num_macros = len(self.macros)
-        self.current_macro = None
-        for i, mac in enumerate(self.macros):
-            mac.identifier = i
-
-
-class Online_SMDP_Agent_Q(SMDP_Agent_Q):
-    def __init__(self, env, macros):
-        super().__init__(env)
-        self.q_func = SMDPQTable(env.get_movability_map(), macros)
+        self.q_func = SMDPQTable(env.get_movability_map(fill=True), macros)
+        self.q_orig = copy.deepcopy(self.q_func)
 
         self.macros = macros
         self.num_macros = len(self.macros)
@@ -112,7 +102,7 @@ class Macro():
         act_temp = self.action_seq[self.current_time]
         self.current_time += 1
 
-        if self.current_time == self.macro_len:
+        if self.current_time >= self.macro_len:
             self.active = False
             self.current_time = 0
 

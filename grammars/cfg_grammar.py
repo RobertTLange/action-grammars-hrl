@@ -7,13 +7,13 @@ import string
 import random
 import numpy as np
 from collections import Counter
-from utils import *
+# from utils import *
 
 original_dir = os.getcwd()
 base_dir =  original_dir + "/grammars"
 trace_dir = base_dir + "/traces/"
 seq_dir = base_dir + "/sequitur/"
-lexis_dir = base_dir + "/Lexis/"
+lexis_dir = "/Users/rtl/Dropbox/PHD_ECN/PROJECTS/ActionGrammars/code/grammars/Lexis"
 
 class run_grammar():
     """
@@ -48,16 +48,19 @@ class run_grammar():
     def run_lexis(self):
         # Run the lexis grammar inferene, outfile results and read them in
         os.remove(self.path_output) if os.path.exists(self.path_output) else None
+
         try:
             command = 'python Lexis.py -m -t c -f i ' + self.path_string + ' >> ' + self.path_output
+            print(os.getcwd(), command)
             os.system(command)
 
             with open(self.path_output) as f:
                 self.output = f.read().splitlines()
+            print(self.output)
             self.g_type = "lexis"
         except:
             print("Lexis failed")
-        os.remove(self.path_output) if os.path.exists(self.path_output) else None
+        #os.remove(self.path_output) if os.path.exists(self.path_output) else None
 
     def clean_output(self):
         # Extract non-terminal symbols and corresponding productions
@@ -153,7 +156,8 @@ class run_grammar():
         return comp_ratio, shannon_pre, shannon_post
 
 
-def get_macros_from_traces(env, no_macros, action_list, g_type="sequitur", k=2):
+def get_macros_from_traces(env, no_macros, action_list,
+                           g_type="sequitur", k=2):
     num_primitives = env.action_space.n
     encoded_seqs = encode_actions(action_list, num_primitives)
 
@@ -169,7 +173,8 @@ def get_macros_from_traces(env, no_macros, action_list, g_type="sequitur", k=2):
     return list(set(clean_macros))
 
 
-def get_macros(no_macros, sentence, num_primitives, g_type="sequitur", k=2):
+def get_macros(no_macros, sentence, num_primitives, num_disks,
+               g_type="sequitur", k=2):
     primitives =  list(string.ascii_lowercase)[:num_primitives]
 
     timestr = time.strftime("%Y%m%d-%H%M%S")
@@ -183,28 +188,45 @@ def get_macros(no_macros, sentence, num_primitives, g_type="sequitur", k=2):
     if g_type == "sequitur":
         os.chdir(seq_dir)
         Grammar.run_sequitur()
-    if g_type == "lexis":
-        os.chdir(lexis_dir)
-        Grammar.run_lexis()
+        Grammar.clean_output()
 
-    Grammar.clean_output()
+        temp_S = Grammar.S.split("-")
+        occ = dict(Counter(temp_S))
+        for key in primitives:
+            try:
+                del occ[key]
+            except:
+                continue
 
-    temp_S = Grammar.S.split("-")
-    occ = dict(Counter(temp_S))
-    for key in primitives:
-        try:
-            del occ[key]
-        except:
-            continue
+        if no_macros != "all":
+            sorted_occ = sorted(occ.items(), key=lambda x: x[1], reverse=True)
+            sorted_occ = sorted_occ[0:no_macros]
+            sorted_macros = [int(m[0]) for m in sorted_occ]
+            macros = [Grammar.flat_productions[i] for i in sorted_macros]
+        else:
+            macros = Grammar.flat_productions[1:]
 
-    if no_macros != "all":
-        sorted_occ = sorted(occ.items(), key=lambda x: x[1], reverse=True)
-        sorted_occ = sorted_occ[0:no_macros]
-        sorted_macros = [int(m[0]) for m in sorted_occ]
-        macros = [Grammar.flat_productions[i] for i in sorted_macros]
-    else:
-        macros = Grammar.flat_productions[1:]
+    elif g_type == "lexis":
+        # os.chdir(lexis_dir)
+        # Grammar.run_lexis()
+
+        # TODO: Until weird Lexis bug isnt fixed use the production rules
+        # previously inferred
+        lexis_macros = {4: ['abd'], 5:['bafbcdb'],
+                        6: ['abd', 'efaedce', 'abdaefabdcedabd'],
+                        7: ['bafbcdbafecfbafbcdbcfecdbafbcdb',
+                            'fec', 'bafbcdb', 'fecfbafecdbcfec']}
+
+        macros = lexis_macros[num_disks]
 
     os.remove(trace_dir + temp) if os.path.exists(trace_dir + temp) else None
     os.chdir(original_dir)
     return macros
+
+
+if __name__ == "__main__":
+    print(os.getcwd())
+    Grammar = run_grammar("/Users/rtl/Dropbox/PHD_ECN/PROJECTS/ActionGrammars/code/grammars/temp.txt", 2)
+    os.chdir(lexis_dir)
+    Grammar.run_lexis()
+    Grammar.clean_output()

@@ -1,7 +1,8 @@
 import time
+import numpy as np
+
 import gym
 import gym_hanoi
-import numpy as np
 
 from agents.q_agent import Agent_Q
 from agents.smdp_q_agent import SMDP_Agent_Q, Macro
@@ -18,23 +19,32 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
                  save_fname=None):
     its, steps, sd_steps, rew, sd_rew = [], [], [], [], []
 
+    env = gym.make("Hanoi-v0")
+    env.set_env_parameters(num_disks, env_noise=0, verbose=False)
+    params = learning_parameters(l_type)
+
+    if l_type == "Q-Learning":
+        agent = Agent_Q(env)
+    elif l_type == "Imitation-SMDP-Q-Learning":
+        macros = get_optimal_macros(env, num_disks, "Sequitur")
+        agent = SMDP_Agent_Q(env, macros)
+    elif l_type == "Transfer-SMDP-Q-Learning":
+        macros = get_optimal_macros(env,
+                                    num_disks - transfer_distance,
+                                    "Sequitur")
+        agent = SMDP_Agent_Q(env, macros)
+
     for i in range(num_times):
         tic = time.time()
-        env = gym.make("Hanoi-v0")
-        env.set_env_parameters(num_disks, env_noise=0, verbose=False)
-
-        params = learning_parameters(l_type)
-
+        # Reset values to 0 initialization without having to recompute mov_map
+        agent.reset_values()
         if l_type == "Q-Learning":
-            agent = Agent_Q(env)
             hist, er_buffer = q_learning(env, agent, num_episodes, max_steps,
                                          **params, log_freq=log_freq,
                                          log_episodes=log_episodes,
                                          verbose=False)
 
         elif l_type == "Imitation-SMDP-Q-Learning":
-            macros = get_optimal_macros(env, num_disks, "Sequitur")
-            agent = SMDP_Agent_Q(env, macros)
             hist, er_buffer = smdp_q_learning(env, agent, num_episodes,
                                               max_steps, **params,
                                               log_freq=log_freq,
@@ -42,10 +52,6 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
                                               verbose=False)
 
         elif l_type == "Transfer-SMDP-Q-Learning":
-            macros = get_optimal_macros(env,
-                                        num_disks - transfer_distance,
-                                        "Sequitur")
-            agent = SMDP_Agent_Q(env, macros)
             hist, er_buffer = smdp_q_learning(env, agent, num_episodes,
                                               max_steps, **params,
                                               log_freq=log_freq,

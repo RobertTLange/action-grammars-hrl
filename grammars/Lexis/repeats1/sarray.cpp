@@ -142,10 +142,10 @@ lcpa(const int *a, const int *s0, int *lcp, int n, int *inv)
 */
 
 inline bool leq(int a1, int a2,   int b1, int b2) { // lexic. order for pairs
-  return(a1 < b1 || (a1 == b1 && a2 <= b2));
+  return(a1 < b1 || a1 == b1 && a2 <= b2);
 }                                                   // and triples
 inline bool leq(int a1, int a2, int a3,   int b1, int b2, int b3) {
-  return(a1 < b1 || (a1 == b1 && leq(a2,a3, b2,b3)));
+  return(a1 < b1 || a1 == b1 && leq(a2,a3, b2,b3));
 }
 // stably sort a[0..n-1] to b[0..n-1] with keys in 0..K from r
 static void radixPass(int* a, int* b, int* r, int n, int K)

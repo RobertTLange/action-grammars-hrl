@@ -173,12 +173,13 @@ def get_rollout_policy(env, agent, max_steps,
 
 
 def macro_step(action, state, agent, env, er_buffer, ep_id):
-    macro_id = action-6
+    macro_id = action - 6
     agent.macros[macro_id].active = True
     rewards = []
 
     while agent.macros[macro_id].active:
         action = agent.macros[macro_id].follow_macro()
+
         if action is not None:
             # Macro action is allowed to take place
             next_state, reward, done, _ = env.step(action)
@@ -186,7 +187,7 @@ def macro_step(action, state, agent, env, er_buffer, ep_id):
             if er_buffer is not None:
                 er_buffer.push(ep_id, state, action,
                                reward, next_state, done, macro_id)
-            next_state = state
+            state = next_state
             if done: break
         else:
             # Macro action is not valid

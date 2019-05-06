@@ -1,3 +1,4 @@
+import copy
 import numpy as np
 
 
@@ -25,19 +26,23 @@ class QTable():
 
 
 class Agent():
-    def __init__(self, env):
-        self.num_actions = env.action_space.n
-        self.allowed = env.get_movability_map()
-
-    def random_action(self, state):
-        valid_actions = np.where(self.allowed[state] != -np.inf)[0]
-        return np.random.choice(valid_actions)
+    def __init__(self, env, num_macros=0):
+        self.num_actions = env.action_space.n + num_macros
+        self.allowed = env.get_movability_map(fill=True)
 
 
 class Agent_Q(Agent):
-    def __init__(self, env):
-        super().__init__(env)
+    def __init__(self, env, num_macros=0):
+        super().__init__(env, num_macros)
         self.q_func = QTable(env.get_movability_map())
+        self.q_orig = copy.deepcopy(self.q_func)
+
+    def reset_values(self):
+        self.q_func = copy.deepcopy(self.q_orig)
+
+    def random_action(self, state):
+        valid_actions = np.where(self.q_func(state) != -np.inf)[0]
+        return np.random.choice(valid_actions)
 
     def greedy_action(self, state):
         q_values = self.q_func(state)

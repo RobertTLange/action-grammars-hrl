@@ -9,6 +9,7 @@ from grammars.cfg_grammar import *
 from agents.q_agent import QTable, Agent_Q
 from utils.general import *
 
+
 def smdp_q_learning_update(gamma, alpha, lambd, q_func, eligibility,
                            cur_state, action, next_state, reward, done, stp,
                            old_greedy_choice=None, old_action=None, old_state=None):
@@ -57,9 +58,9 @@ def smdp_q_learning(env, agent, num_episodes, max_steps,
         old_action = None
         old_state = None
 
-        for i in range(max_steps):
+        while stp <= max_steps:
             action = agent.epsilon_greedy_action(state, epsilon)
-
+            # print(ep_id, state, action)
             if action > 5:
                 next_state, reward, done, _ = macro_step(action, state, agent,
                                                          env, er_buffer,
@@ -73,7 +74,8 @@ def smdp_q_learning(env, agent, num_episodes, max_steps,
             greedy_choice = agent.greedy_action(next_state)
 
             # Update value function
-            eligibility, tde = smdp_q_learning_update(gamma, alpha, lambd, agent.q_func,
+            eligibility, tde = smdp_q_learning_update(gamma, alpha, lambd,
+                                                      agent.q_func,
                                                  eligibility, state, action,
                                                  next_state, reward, done, stp,
                                                  old_greedy_choice, old_action, old_state)

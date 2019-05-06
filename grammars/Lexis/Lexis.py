@@ -13,18 +13,15 @@ import operator
 import time
 import subprocess
 import networkx as nx
-import numbers
-import math
-from collections import Counter
 
 class SequenceType:
     Character, Integer, SpaceSeparated = ('c', 'i', 's')
 class CostFunction:
-    ConcatenationCost, EdgeCost, InfoCost = ('c', 'e', 'i')
+    ConcatenationCost, EdgeCost = ('c', 'e')
 class RepeatClass:
     Repeat, MaximalRepeat, LargestMaximalRepeat, SuperMaximalRepeat = ('r', 'mr', 'lmr', 'smr')
 class LogFlag:
-    ConcatenationCostLog, EdgeCostLog, InfoCostLog = range(3)
+    ConcatenationCostLog, EdgeCostLog = range(2)
 
 class DAG(object):
     __preprocessedInput = [] #Original input as a sequence of integers
@@ -172,27 +169,15 @@ class DAG(object):
         # print self.__DAGStrings
 
     #...........Main G-Lexis Algorithm Functions........
-    def __codingLength(self):
-        codeSeq = map(lambda x: tuple(self.__separatorInts)[0] if x in self.__separatorInts else x, self.__concatenatedDAG)
-        freqs = Counter(codeSeq)
-        return  reduce(lambda x,y: x-y*math.log(y,2),[len(codeSeq)*math.log(len(codeSeq),2)]+freqs.values())
-        codeLen = 0
-        ps = [a/sum(freqs.values()) for a in freqs.values()]
-        #codeLen = [-a*math.log(b,2) for a,b in zip(freqs.values(),ps)]
-        return sum(codeLen)
-    def GLexis(self, quiet, normalRepeatType, costFunction, costWeight):
+    def GLexis(self, quiet, normalRepeatType, costFunction):
         self.__quietLog = quiet
         while True: #Main loop
             #Logging DAG Cost
             self.__logViaFlag(LogFlag.ConcatenationCostLog)
             self.__logViaFlag(LogFlag.EdgeCostLog)
-            self.__logViaFlag(LogFlag.InfoCostLog)
 
             #Extracting Maximum-Gain Repeat
-            if costFunction == 'i':
-                (maximumRepeatGainValue, selectedRepeatOccs) = self.__retreiveMaximumGainRepeat(normalRepeatType, CostFunction.InfoCost)
-            else:
-                (maximumRepeatGainValue, selectedRepeatOccs) = self.__retreiveMaximumGainRepeat(normalRepeatType, CostFunction.EdgeCost)
+            (maximumRepeatGainValue, selectedRepeatOccs) = self.__retreiveMaximumGainRepeat(normalRepeatType, CostFunction.EdgeCost)
             if maximumRepeatGainValue == -1:
                 break #No repeats, hence terminate
 
@@ -212,10 +197,9 @@ class DAG(object):
             return len(self.__concatenatedDAG)-2*len(self.__separatorInts)
         if costFunction == CostFunction.EdgeCost:
             return len(self.__concatenatedDAG)-len(self.__separatorInts)
-        if costFunction == CostFunction.InfoCost:
-            return self.__codingLength()
+
     #Replaces a repeat's occurrences with a new symbol and creates a new node in the DAG
-    def __replaceRepeat(self,(repeatLength, (repeatOccs))):
+    def __replaceRepeat(self, (repeatLength, (repeatOccs))):
         repeat = self.__concatenatedDAG[repeatOccs[0]:repeatOccs[0]+repeatLength]
         newTmpConcatenatedDAG = []
         newTmpConcatenatedNTs = []
@@ -246,24 +230,14 @@ class DAG(object):
         repeats = self.__extractRepeats(repeatClass)
         maxRepeatGain = 0
         candidateRepeats = []
-        if costFunction == CostFunction.InfoCost:
-            codeSeq = map(lambda x: tuple(self.__separatorInts)[0] if x in self.__separatorInts else x, self.__concatenatedDAG)
-            freqs = Counter(codeSeq)
         for r in repeats: #Extracting maximum repeat
             repeatStats = r.split()
-            idx = map(int,repeatStats[2][1:-1].split(','))[0]
-            repeatString = self.__concatenatedDAG[idx:idx+int(repeatStats[0])]
             repeatOccs = self.__extractNonoverlappingRepeatOccurrences(int(repeatStats[0]),map(int,repeatStats[2][1:-1].split(',')))
-            if costFunction == CostFunction.InfoCost:
-                repeatGain = self.__repeatGain(repeatString, int(repeatStats[0]), len(repeatOccs), costFunction, costWeight, freqs)
-            else:
-                repeatGain = self.__repeatGain(repeatString, int(repeatStats[0]), len(repeatOccs), costFunction, costWeight)
-                                
-            if maxRepeatGain < repeatGain:
-                maxRepeatGain = repeatGain
+            if maxRepeatGain < self.__repeatGain(int(repeatStats[0]), len(repeatOccs), costFunction):
+                maxRepeatGain = self.__repeatGain(int(repeatStats[0]), len(repeatOccs), costFunction)
                 candidateRepeats = [(int(repeatStats[0]),len(repeatOccs),repeatOccs)]
             else:
-                if maxRepeatGain > 0 and maxRepeatGain == repeatGain:
+                if maxRepeatGain > 0 and maxRepeatGain == self.__repeatGain(int(repeatStats[0]), len(repeatOccs), costFunction):
                     candidateRepeats.append((int(repeatStats[0]),len(repeatOccs),repeatOccs))
         if(len(candidateRepeats) == 0):
             return (-1, (0, []))
@@ -274,30 +248,11 @@ class DAG(object):
         selectedRepeatOccs = sorted(selectedRepeatStats[2])
         return (maxRepeatGain, (selectedRepeatLength, selectedRepeatOccs))
     #Returns the repeat gain, according to the chosen cost function
-    def __repeatGain(self, repeatString, repeatLength, repeatOccsLength, costFunction, costWeight, freqs=[]):
-        #Generalised cost function with linear weight w, tuning hierarchy depth, with special cases:
-        #w=0 - most frequent repeat
-        #w=1 - longest repeats
-        #w=0.5 - most compressive (as in default G-Lexis)
-        if costFunction == CostFunction.InfoCost:
-            infoCost = 0
-            repeatFreqs = Counter(repeatString)
-            deltaN = -(repeatLength-1)*(repeatOccsLength-1)+2
-            totalLength = len(self.__concatenatedDAG)
-            infoCost += (totalLength + deltaN)*math.log(totalLength + deltaN,2) - totalLength*math.log(totalLength,2)
-            for char in repeatFreqs.keys():
-                deltaN = -repeatFreqs[char]*(repeatOccsLength-1)
-                infoCost -= (freqs[char]+deltaN)*math.log(freqs[char]+deltaN,2) - freqs[char]*math.log(freqs[char],2)
-            infoCost -= repeatOccsLength * math.log(repeatOccsLength,2)
-            infoCost -= (freqs[tuple(self.__separatorInts)[0]]+1.)*math.log(freqs[tuple(self.__separatorInts)[0]]+1.,2)-(freqs[tuple(self.__separatorInts)[0]])*math.log(freqs[tuple(self.__separatorInts)[0]],2)
-            return -infoCost
-            
-        else:
-            if repeatLength==1 or repeatOccsLength==1:
-                return -1
-            else:
-                return math.exp(2*(costWeight * math.log(repeatLength-1)+(1-costWeight)*math.log(repeatOccsLength-1)))
-
+    def __repeatGain(self, repeatLength, repeatOccsLength, costFunction):
+        # if costFunction == CostFunction.ConcatenationCost:
+        return (repeatLength-1)*(repeatOccsLength-1)
+        # if costFunction == CostFunction.EdgeCost:
+        #     return (repeatLength-1)*(repeatOccsLength-1)-1
     #Extracts the designated class of repeats (Assumes ./repeats binary being in the same directory)
     #Output is a string, each line containing: "RepeatLength    NumberOfOccurrence  (CommaSeparatedOccurrenceIndices)"
     def __extractRepeats(self, repeatClass):
@@ -550,7 +505,6 @@ class DAG(object):
     def printDAG(self, intDAGPrint):
         self.__logMessage('DAGCost(Concats): ' + str(self.DAGCost(CostFunction.ConcatenationCost)))
         self.__logMessage('DAGCost(Edges):' + str(self.DAGCost(CostFunction.EdgeCost)))
-        self.__logMessage('DAGCost(Info):' + str(self.DAGCost(CostFunction.InfoCost)))
         DAG = self.__concatenatedDAG
         # print 'dag'
         # print DAG
@@ -609,18 +563,15 @@ class DAG(object):
     def __logViaFlag(self, flag):
         if not self.__quietLog:
             if flag == LogFlag.ConcatenationCostLog:
-                #sys.stderr.write('DAGCost(Concats): ' + str(self.DAGCost(CostFunction.ConcatenationCost)) + '\n')
+                sys.stderr.write('DAGCost(Concats): ' + str(self.DAGCost(CostFunction.ConcatenationCost)) + '\n')
                 print(str('DAGCost(Concats): ' + str(self.DAGCost(CostFunction.ConcatenationCost))))
             if flag == LogFlag.EdgeCostLog:
-                #sys.stderr.write('DAGCost(Edges): ' + str(self.DAGCost(CostFunction.EdgeCost)) + '\n')
+                sys.stderr.write('DAGCost(Edges): ' + str(self.DAGCost(CostFunction.EdgeCost)) + '\n')
                 print(str('DAGCost(Edges): ' + str(self.DAGCost(CostFunction.EdgeCost))))
-            if flag == LogFlag.InfoCostLog:
-                print(str('DAGCost(Info): ' + str(self.DAGCost(CostFunction.InfoCost))))
-                
     # Log custom message
     def __logMessage(self, message):
         if not self.__quietLog:
-            #sys.stderr.write(message + '\n')
+            sys.stderr.write(message + '\n')
             print(str(message))
 
     # ...........Utility Functions........
@@ -652,11 +603,17 @@ class DAG(object):
                     newContents += '\n'
             return (newContents.rstrip('\n'), letterDict)
         if charSeq == SequenceType.Integer:  # input is space seperated integers
-            for line in inputFile:
+            newContents = ''
+            dict = {}
+            for l in inputFile.read().splitlines():
+                line = l.split()
                 for i in range(len(line)):
-                    if line[i] not in set(range(9)) and line[i] != ' ':
+                    if not isinstance(int(line[i]), int) or line[i] == ' ':
                         raise ValueError('Input file is not in space-separated integer form.')
-            return (inputFile, {})
+                    else:
+                        dict[int(line[i])] = line[i]
+                newContents += l + '\n'
+            return (newContents.rstrip('\n'), dict)
         if charSeq == SequenceType.SpaceSeparated:  # input is space-seperated words
             wordDict = {}
             counterDict = {}
@@ -683,9 +640,8 @@ def processParams(argv):
     functionFlag = 'e' #cost function to be optimized
     noNewLineFlag = True #consider each line as a separate string
     loadDAGFlag = False
-    costWeight = 0.5
 
-    usage = """Usage: ./python Lexis.py [-t (c | i | s) | -p (i) | -q | -r (r | mr | lmr | smr) | -f (c | e) | -m | -l | -w (0.5)] <filename>
+    usage = """Usage: ./python Lexis.py [-t (c | i | s) | -p (i) | -q | -r (r | mr | lmr | smr) | -f (c | e) | -m | -l] <filename>
     [-t]: choosing between character sequence, integer sequence or space-separated sequence
         c - character sequence
         i - integer sequence
@@ -701,16 +657,14 @@ def processParams(argv):
     [-f]: cost function to be optimized
         c - concatenation cost
         e - edge cost (default)
-        i - information theoretic cost
     [-m]: consider each line of the input file as a separate target string
     [-l]: load a DAG file (will override -r -t -m options)
-    [-w]: specify weight in cost function between repeat length and occurrences, for w in [0,1] (has no effect with -f i)
                     """
     if len(argv) == 1 or (len(argv) == 2 and argv[1] == '-h'):
         sys.stderr.write('Invalid input\n')
         sys.stderr.write(usage + '\n')
         sys.exit()
-    optlist,args = getopt.getopt(argv[1:], 't:p:qr:f:mlw:')
+    optlist,args = getopt.getopt(argv[1:], 't:p:qr:f:ml')
     for opt,arg in optlist:
         if opt == '-t':
             for ch in arg:
@@ -738,7 +692,7 @@ def processParams(argv):
                 sys.stderr.write(usage + '\n')
                 sys.exit()
         if opt == '-f':
-            if arg == 'c' or arg == 'e' or arg == 'i':
+            if arg == 'c' or arg == 'e':
                 functionFlag = arg
             else:
                 sys.stderr.write('Invalid input in ' + '-f' + ' flag\n')
@@ -748,27 +702,17 @@ def processParams(argv):
             noNewLineFlag = False
         if opt == '-l':
             loadDAGFlag = True
-        if opt == '-w':
-            try:
-                costWeight = float(arg)
-            except ValueError:
-                sys.stderr.write('Invalid input in -w flag')
-                sys.stderr.write(usage + '\n')
-                sys.exit()
-    return (chFlag, printIntsDAG, quietLog, rFlag, functionFlag, noNewLineFlag, loadDAGFlag, costWeight)
-    
+    return (chFlag, printIntsDAG, quietLog, rFlag, functionFlag, noNewLineFlag, loadDAGFlag)
 
 if __name__ == "__main__":
-    (chFlag, printIntsDAG, quietLog, rFlag, functionFlag, noNewLineFlag, loadDAGFlag, costWeight) = processParams(sys.argv)
+    (chFlag, printIntsDAG, quietLog, rFlag, functionFlag, noNewLineFlag, loadDAGFlag) = processParams(sys.argv)
     g = DAG(open(sys.argv[-1],'r'), loadDAGFlag, chFlag, noNewLineFlag)
-    #print entropy2(map(lambda x: tuple(g._DAG__separatorInts)[0] if x in g._DAG__separatorInts else x, g._DAG__concatenatedDAG))
-    g.GLexis(quietLog, rFlag, functionFlag, costWeight)
-    print g._DAG__concatenatedDAG
+    g.GLexis(quietLog, rFlag, functionFlag)
     g.printDAG(printIntsDAG)
 
     #If desired to see the central nodes, please uncomment the lines below
-    #centralNodes = g.greedyCoreID_ByTau(0.95)
-    #print
-    #print 'Central Nodes:'
-    #for i in range(len(centralNodes)):
-    #    print centralNodes[i]
+    # centralNodes = g.greedyCoreID_ByTau(0.95)
+    # print
+    # print 'Central Nodes:'
+    # for i in range(len(centralNodes)):
+    #     print centralNodes[i]
