@@ -82,13 +82,18 @@ def run_learning(l_type, num_times, num_disks, num_episodes, max_steps,
                                                                 round(t_total, 2)))
 
     its = np.array(its).mean(axis=0)
-    steps = np.array(steps).mean(axis=0)
-    sd_steps = np.array(sd_steps).mean(axis=0)
-    rew = np.array(rew).mean(axis=0)
-    sd_rew = np.array(sd_rew).mean(axis=0)
+    med_steps = np.percentile(np.array(steps), 50, axis=0)
+    p10_steps = np.percentile(np.array(steps), 10, axis=0)
+    p90_steps = np.percentile(np.array(steps), 90, axis=0)
+    # np.array(sd_steps).mean(axis=0)
+    med_rew = np.percentile(np.array(rew), 50, axis=0)
+    p10_rew = np.percentile(np.array(rew), 10, axis=0)
+    p90_rew = np.percentile(np.array(rew), 90, axis=0)
 
     if save_fname is not None:
-        out = np.array([its, steps, sd_steps, rew, sd_rew])
+        out = np.array([its,
+                        med_steps, p10_steps, p90_steps,
+                        med_rew, p10_rew, p90_rew])
         np.savetxt(save_fname, out.T)
         print("Outfiled the results to {}.".format(save_fname))
 

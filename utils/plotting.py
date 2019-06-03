@@ -9,6 +9,7 @@ CB_color_cycle = ['#377eb8', '#ff7f00', '#4daf4a',
 
 cols_to_plot = ["#B31329","#1386A0"]
 
+
 def smooth(ts, windowSize):
     # Perform smoothed moving average with specified window to time series
     ts_MA = []
@@ -20,24 +21,24 @@ def smooth(ts, windowSize):
     return ts_MA
 
 
-def plot_learning(episodes, mean_ts, sd_ts, smooth_degree,
+def plot_learning(episodes, med_ts, p10_ts, p90_ts, smooth_degree,
                   title, label_temp, grammar_update_ind=None,
                   save_fname=None):
-    mean_ts = smooth(mean_ts, smooth_degree)
-    sd_ts = smooth(sd_ts, smooth_degree)
+    med_ts = smooth(med_ts, smooth_degree)
+    p10_ts = smooth(p10_ts, smooth_degree)
+    p90_ts = smooth(p90_ts, smooth_degree)
 
     fig = plt.figure(figsize=(10, 10))
     plot = fig.add_subplot(111)
 
-    for i in range(len(mean_ts)):
-        plt.plot(episodes[i][smooth_degree-1:], mean_ts[i], cols_to_plot[i],
+    for i in range(len(med_ts)):
+        plt.plot(episodes[i][smooth_degree-1:], med_ts[i], cols_to_plot[i],
                  label=label_temp[i], linewidth=3)
-        plt.plot(episodes[i][smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
+        plt.plot(episodes[i][smooth_degree-1:], p10_ts[i],
                  cols_to_plot[i], alpha=0.25, linewidth=2)
-        plt.plot(episodes[i][smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
+        plt.plot(episodes[i][smooth_degree-1:], p90_ts[i],
                  cols_to_plot[i], alpha=0.25, linewidth=2)
-        plt.fill_between(episodes[i][smooth_degree-1:], mean_ts[i] - 2*sd_ts[i],
-                         mean_ts[i] + 2*sd_ts[i],
+        plt.fill_between(episodes[i][smooth_degree-1:], p10_ts[i], p90_ts[i],
                          facecolor=cols_to_plot[i], alpha=0.25)
 
     if grammar_update_ind is not None:
@@ -55,7 +56,8 @@ def plot_learning(episodes, mean_ts, sd_ts, smooth_degree,
 
     plot.tick_params(axis='both', which='major', labelsize=20)
     plot.tick_params(axis='both', which='minor', labelsize=8)
-
+    plt.tight_layout()
+    
     if save_fname is not None:
         plt.savefig(save_fname, dpi=900)
         print("Saved figure to {}".format(save_fname))

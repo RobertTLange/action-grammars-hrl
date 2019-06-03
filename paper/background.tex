@@ -47,6 +47,7 @@
   \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
 
 \usepackage{fancyvrb}
+\usepackage{subfig}
 
 % pandoc tmp.markdown -t latex -o tmp.tex
 
@@ -252,11 +253,35 @@ Given action sequences of an expert the HRL agent can infer a set of grammar mac
 
 $$\mathcal{A}^{\hat{G}} = \mathcal{A} \cup \mathcal{M}^{2-Seq} = \mathcal{A} \cup \{bafbcd, baf, ec, bc\}$$
 
-\missingfigure[figwidth=\textwidth]{Learning Results for Expert Grammar}
+\begin{figure}[H]
+\minipage{0.33\textwidth}
+  \includegraphics[width=\linewidth]{figures/4_disks_transfer_grammar}
+\endminipage\hfill
+\minipage{0.33\textwidth}
+  \includegraphics[width=\linewidth]{figures/5_disks_transfer_grammar}
+\endminipage\hfill
+\minipage{0.33\textwidth}%
+  \includegraphics[width=\linewidth]{figures/6_disks_transfer_grammar}
+\endminipage
+\caption{Learning Results for SMDP-Q-Learning with Expert Grammar Macros for 4, 5 and 6 Disk Environment. Median, 10th percentile and 90th percentile reported over 5 runs.}
+\label{fig:expert_grammar}
+\end{figure}
 
-Instead of using the optimal grammar macros for a specific environment, we are also interested in assessing how well the grammars learned for a more simplistic environment (i.e. $N-1$ disks).  
+Figure \ref{fig:expert_grammar} displays learning results for different SMDP-Q-Learning agents with macro-actions defined by the production rules inferred from a trace of the optimal policy. One can observe that the grammar macros greatly accelerate the learning progress of the agent. Furthermore, the variance of rollouts is greatly reduced due to increased robustness. Instead of using the optimal grammar macros for a specific environment, we are also interested in assessing how well the grammars learned for a more simplistic environment (i.e. $N-1$ disks).  
 
-\missingfigure[figwidth=\textwidth]{Learning Results for Transfer Grammar}
+
+\missingfigure[figwidth=\textwidth]{Learning Result for Transfer Grammar}
+%
+%\begin{figure}[H]
+%\minipage{0.475\textwidth}
+%  \includegraphics[width=\linewidth]{figures/4_disks_transfer_grammar}
+%\endminipage\hfill
+%\minipage{0.475\textwidth}
+%  \includegraphics[width=\linewidth]{figures/4_disks_transfer_grammar}
+%\endminipage\hfill
+%\caption{Learning Results for SMDP-Q-Learning with Transfer Grammar Macros for 5 and 6 Disk Environment. Median, 10th percentile and 90th percentile reported over 5 runs.}
+%\label{fig:transfer_grammar}
+%\end{figure}
 
 
 %-----------------------------------
@@ -264,9 +289,7 @@ Instead of using the optimal grammar macros for a specific environment, we are a
 
 \missingfigure[figwidth=\textwidth]{Learning Result for Online Inferred Grammar}
 
-\missingfigure[figwidth=\textwidth]{Visualization of Iteratively Inferred Grammar}
-
-\rob{Talk about schedule and robustness of grammars.}
+\rob{Add Grammar DQN experiments.}
 
 %--------------------------------------------------------------------
 \newpage
