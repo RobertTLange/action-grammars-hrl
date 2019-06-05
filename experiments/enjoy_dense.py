@@ -43,15 +43,21 @@ def main():
         episode_rew = 0
         converted = converter(screen_obs)
         my_plot = plt.imshow(converted)
+        steps = 0
         while not done:
             #obs, rew, done, _ , screen_obs = env.step_with_render(act(obs)[0])
             obs, rew, done, _ , screen_obs = env.step_with_render(env.action_space.sample())
+            print(env.action_space)
             converted = converter(screen_obs)
             plt.ion()
             my_plot.autoscale()
             my_plot.set_data(converted)
             plt.pause(.1)
             plt.draw()
+            plt.axis("off")
+            steps += 1
+            if steps == 1:
+                plt.savefig("example_frame.png", dpi=300)
             plt.show()
             #print("action: ", act(obs)[0])
             episode_rew += rew

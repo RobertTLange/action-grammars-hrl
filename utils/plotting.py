@@ -57,9 +57,9 @@ def plot_learning(episodes, med_ts, p10_ts, p90_ts, smooth_degree,
     plot.tick_params(axis='both', which='major', labelsize=20)
     plot.tick_params(axis='both', which='minor', labelsize=8)
     plt.tight_layout()
-    
+
     if save_fname is not None:
-        plt.savefig(save_fname, dpi=900)
+        plt.savefig(save_fname, dpi=200)
         print("Saved figure to {}".format(save_fname))
     return
 

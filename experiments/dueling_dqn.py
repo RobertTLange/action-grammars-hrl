@@ -9,7 +9,6 @@ import torch.autograd as autograd
 import warnings
 warnings.filterwarnings("ignore")
 
-
 # Set device config variables
 USE_CUDA = torch.cuda.is_available()
 Variable = lambda *args, **kwargs: autograd.Variable(*args, **kwargs).cuda() if USE_CUDA else autograd.Variable(*args, **kwargs)
@@ -21,14 +20,38 @@ def init_weights(m):
         m.bias.data.fill_(0.01)
 
 
+def init_agents(model, L_RATE, USE_CUDA, load_checkpoint_path=None):
+    """
+    In: Specific model (I-DQN/RIAL/etc), agent/model params
+    Out: Model (or dictionay) as well as optimizer
+    """
+    agents = {"current": model(),
+              "target": model()}
+
+    if USE_CUDA:
+        agents["current"] = agents["current"].cuda()
+        agents["target"] = agents["target"].cuda()
+
+    if load_checkpoint_path is not None:
+        checkpoint = torch.load(load_checkpoint_path,
+                                map_location='cpu')
+        agents["current"].load_state_dict(checkpoint)
+        agents["target"].load_state_dict(checkpoint)
+
+
+    # Initialize optimizer object - single agent
+    optimizers = optim.Adam(params=agents["current"].get_params(), lr=L_RATE)
+    return agents, optimizers
+
+
 class MLP_DDQN(nn.Module):
-    def __init__(self, params):
+    def __init__(self):
         super(MLP_DDQN, self).__init__()
         # Implements a Dueling DQN agent based on MLP
-        num_inputs = params.observation_shape
-        hidden_units = params.model_mlp_size
-        self.action_space_size = params.action_space_size
+        num_inputs = 10*20*6
+        self.action_space_size = 4
 
+        hidden_units = 128
         self.feature = nn.Sequential(
             nn.Linear(num_inputs, hidden_units),
             nn.ReLU()
