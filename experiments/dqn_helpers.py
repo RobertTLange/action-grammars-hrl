@@ -21,6 +21,9 @@ def command_line_dqn():
     parser.add_argument('-update_upd', '--UPDATE_EVERY', action="store",
                         default=100, type=int,
                         help='Update target network after # batch updates')
+    parser.add_argument('-n_runs', '--RUN_TIMES', action="store",
+                        default=1, type=int,
+                        help='# Times to run agent learning')
     parser.add_argument('-n_eps', '--NUM_EPISODES', action="store",
                         default=100, type=int,
                         help='# Epochs to train for')

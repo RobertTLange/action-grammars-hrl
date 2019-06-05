@@ -11,7 +11,7 @@ from dueling_dqn import MLP_DDQN, init_agent
 from dqn_helpers import command_line_dqn, ReplayBuffer, update_target, epsilon_by_episode, compute_td_loss, get_logging_stats
 
 
-def main(args):
+def run_learning(args):
     log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
 
     # Set the GPU device on which to run the agent
@@ -102,9 +102,40 @@ def main(args):
                 df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
                 df_to_save.to_csv(STATS_FNAME)
 
-    return
+    # Finally save all results!
+    torch.save(agents["current"].state_dict(), AGENT_FNAME)
+    # Save the logging dataframe
+    df_to_save = pd.concat([reward_stats, step_stats], axis=1)
+    df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
+    df_to_save = df_to_save.reset_index()
+    df_to_save.to_csv(STATS_FNAME)
+    return df_to_save
 
+
+def run_multiple_times(args):
+
+    df_across_runs = []
+    print("START RUNNING AGENT LEARNING FOR {} TIMES".format(args.RUN_TIMES))
+    for t in range(args.RUN_TIMES):
+        start_t = time.time()
+        df_temp = run_learning(args)
+        df_across_runs.append(df_temp)
+        total_t = time.time() - start_t
+        print("Done training {}/{} runs after {:.2f} Secs".format(t+1,
+                                                                  args.RUN_TIMES,
+                                                                  total_t))
+
+    df_concat = pd.concat(df_across_runs)
+    by_row_index = df_concat.groupby(df_concat.index)
+    df_means = by_row_index.mean()
+    df_means.to_csv(str(args.RUN_TIMES) + "_RUNS_" + args.STATS_FNAME)
+    return df_means
 
 if __name__ == "__main__":
     args = command_line_dqn()
-    main(args)
+
+    if args.RUN_TIMES == 1:
+        print("START RUNNING AGENT LEARNING FOR 1 TIME")
+        run_learning(args)
+    else:
+        run_multiple_times(args)

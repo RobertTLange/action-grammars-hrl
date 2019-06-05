@@ -7,6 +7,8 @@ import torch.nn as nn
 import torch.autograd as autograd
 import torch.optim as optim
 
+torch.manual_seed(0)
+
 import warnings
 warnings.filterwarnings("ignore")
 
