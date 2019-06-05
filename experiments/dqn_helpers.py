@@ -1,8 +1,10 @@
 import argparse
 import math
 import random
+import pandas as pd
 import numpy as np
 from collections import deque
+import gym
 
 import torch
 import torch.autograd as autograd
@@ -10,14 +12,14 @@ import torch.autograd as autograd
 
 def command_line_dqn():
     parser = argparse.ArgumentParser()
-    parser.add_argument('-roll_eps', '--ROLLOUT_EVERY', action="store",
-                        default=10, type=int,
-                        help='Rollout test performance after # batch updates.')
-    parser.add_argument('-save_eps', '--SAVE_EVERY', action="store",
+    parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",
                         default=50, type=int,
+                        help='Rollout test performance after # batch updates.')
+    parser.add_argument('-save_upd', '--SAVE_EVERY', action="store",
+                        default=2000, type=int,
                         help='Save network and learning stats after # batch updates')
-    parser.add_argument('-update_eps', '--UPDATE_EVERY', action="store",
-                        default=10, type=int,
+    parser.add_argument('-update_upd', '--UPDATE_EVERY', action="store",
+                        default=100, type=int,
                         help='Update target network after # batch updates')
     parser.add_argument('-n_eps', '--NUM_EPISODES', action="store",
                         default=100, type=int,
@@ -58,7 +60,7 @@ def command_line_dqn():
                         default="mlp_agent.pt", type=str,
                         help='Path to store online agents params')
     parser.add_argument('-stats_file', '--STATS_FNAME', action="store",
-                        default="MLP_agent_stats.txt", type=str,
+                        default="MLP_agent_stats.csv", type=str,
                         help='Path to store stats of MLP agent')
     return parser.parse_args()
 
@@ -141,37 +143,37 @@ def compute_td_loss(agents, optimizer, replay_buffer,
     return loss
 
 
-def get_logging_stats(env, agents, GAMMA, NUM_ROLLOUTS, MAX_STEPS):
+def get_logging_stats(opt_counter, agents, GAMMA, NUM_ROLLOUTS, MAX_STEPS):
     steps = []
-    rewards = []
+    rew = []
 
     for i in range(NUM_ROLLOUTS):
-        step_temp, reward_temp, buffer = rollout_episode(env, agents, GAMMA, MAX_STEPS)
+        step_temp, reward_temp, buffer = rollout_episode(agents, GAMMA, MAX_STEPS)
         steps.append(step_temp)
-        rewards.append(reward_temp)
+        rew.append(reward_temp)
 
     steps = np.array(steps)
-    rewards = np.array(rewards)
+    rew = np.array(rew)
 
-    reward_stats = {
-        "mean": rewards.mean(),
-        "sd": rewards.std(),
-        "median": np.median(rewards),
-        "10_percentile": np.percentile(rewards, 10),
-        "90_percentile": np.percentile(rewards, 90)
-    }
+    reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
+                                         "rew_median",
+                                         "rew_10th_P", "rew_90th_p"])
 
-    steps_stats = {
-        "mean": steps.mean(),
-        "sd": steps.std(),
-        "median": np.median(steps),
-        "10_percentile": np.percentile(steps, 10),
-        "90_percentile": np.percentile(steps, 90)
-    }
+    steps_stats = pd.DataFrame(columns=["opt_counter", "steps_mean", "steps_sd",
+                                        "steps_median",
+                                        "steps_10th_P", "steps_90th_p"])
+
+    reward_stats.loc[0] = [opt_counter, rew.mean(), rew.std(), np.median(rew),
+                           np.percentile(rew, 10), np.percentile(rew, 90)]
+
+    steps_stats.loc[0] = [opt_counter, steps.mean(), steps.std(), np.median(steps),
+                         np.percentile(steps, 10), np.percentile(steps, 90)]
+
     return reward_stats, steps_stats
 
 
-def rollout_episode(env, agents, GAMMA, MAX_STEPS):
+def rollout_episode(agents, GAMMA, MAX_STEPS):
+    env = gym.make("dense-v0")
     # Rollout the policy for a single episode - greedy!
     replay_buffer = ReplayBuffer(capacity=5000)
 
@@ -180,7 +182,7 @@ def rollout_episode(env, agents, GAMMA, MAX_STEPS):
     steps = 0
 
     for i in range(MAX_STEPS):
-        action = agents["current"].act(obs.flatten(), epsilon=0)
+        action = agents["current"].act(obs.flatten(), epsilon=0.05)
         next_obs, reward, done, _ = env.step(action)
 
         replay_buffer.push(0, i, obs, action,
