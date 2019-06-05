@@ -5,6 +5,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.autograd as autograd
+import torch.optim as optim
 
 import warnings
 warnings.filterwarnings("ignore")
@@ -20,9 +21,8 @@ def init_weights(m):
         m.bias.data.fill_(0.01)
 
 
-def init_agents(model, L_RATE, USE_CUDA, load_checkpoint_path=None):
+def init_agent(model, L_RATE, USE_CUDA, load_checkpoint_path=None):
     """
-    In: Specific model (I-DQN/RIAL/etc), agent/model params
     Out: Model (or dictionay) as well as optimizer
     """
     agents = {"current": model(),
@@ -40,7 +40,7 @@ def init_agents(model, L_RATE, USE_CUDA, load_checkpoint_path=None):
 
 
     # Initialize optimizer object - single agent
-    optimizers = optim.Adam(params=agents["current"].get_params(), lr=L_RATE)
+    optimizers = optim.Adam(params=agents["current"].parameters(), lr=L_RATE)
     return agents, optimizers
 
 

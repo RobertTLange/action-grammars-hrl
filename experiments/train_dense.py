@@ -1,10 +1,13 @@
 import gym
-import matplotlib.pyplot as plt
+import time
 import numpy as np
 import gridworld
 
+import torch
+import torch.autograd as autograd
+
 from dueling_dqn import MLP_DDQN, init_agent
-from dqn_helpers import command_line_dqn, ReplayBuffer, update_target, epsilon_by_episode, compute_td_loss
+from dqn_helpers import command_line_dqn, ReplayBuffer, update_target, epsilon_by_episode, compute_td_loss, get_logging_stats
 
 
 def main(args):
@@ -22,14 +25,19 @@ def main(args):
     GAMMA, L_RATE = args.GAMMA, args.L_RATE
 
     NUM_EPISODES = args.NUM_EPISODES
+    NUM_ROLLOUTS = args.NUM_ROLLOUTS
     MAX_STEPS = args.MAX_STEPS
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
     SAVE_EVERY = args.SAVE_EVERY
     UPDATE_EVERY = args.UPDATE_EVERY
+    VERBOSE = args.VERBOSE
+
+    AGENT_FNAME = args.AGENT_FNAME
+    STATS_FNAME = args.STATS_FNAME
 
     # Setup agent and replay replay_buffer
-    agents, optimizer = init_agent(MLP_DDQN, args)
-    replay_buffer = ReplayBuffer()
+    agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA)
+    replay_buffer = ReplayBuffer(capacity=5000)
 
     # Initialize optimization update counter and environment
     opt_counter = 0
@@ -39,51 +47,45 @@ def main(args):
     for ep_id in range(NUM_EPISODES):
         epsilon = epsilon_by_episode(ep_id + 1, EPS_START, EPS_STOP, EPS_DECAY)
 
-        obs = env.reset(capacity=5000)
-        done = False
+        obs = env.reset()
         episode_rew = 0
 
-        steps = 0
         for j in range(MAX_STEPS):
-            action = agent["current"].act(obs, epsilon)
+            action = agents["current"].act(obs.flatten(), epsilon)
             next_obs, rew, done, _  = env.step(action)
-            steps += 1
             episode_rew += rew
 
-            if done:
-                break
-
-            replay_buffer.push(ep_id, steps, obs, action,
+            # Push transition to ER Buffer
+            replay_buffer.push(ep_id, j+1, obs, action,
                                rew, next_obs, done)
-
-            obs = next_obs
 
             if len(replay_buffer) > TRAIN_BATCH_SIZE:
                 opt_counter += 1
                 loss = compute_td_loss(agents, optimizer, replay_buffer,
-                                       args, Variable)
+                                       TRAIN_BATCH_SIZE, GAMMA, Variable)
+
+            if done: break
+            else: obs = next_obs
 
         # On-Policy Rollout for Performance evaluation
         if ep_id % ROLLOUT_EVERY == 0:
-            reward_stats, steps_stats, buffer = get_logging_stats(env,
-                                                                  agents,
-                                                                  params)
+            r_stats, s_stats = get_logging_stats(env, agents, GAMMA, NUM_ROLLOUTS, MAX_STEPS)
 
-            logger.update_performance(ep_id, reward_stats, steps_stats)
-
-            if verbose:
+            if VERBOSE:
                 stop = time.time()
                 print(log_template.format(ep_id, stop-start,
-                                           reward_stats["sum_median"], reward_stats["sum_mean"],
-                                           steps_stats["median"], steps_stats["mean"]))
+                                           r_stats["median"], r_stats["mean"],
+                                           s_stats["median"], s_stats["mean"]))
                 start = time.time()
 
         if ep_id % UPDATE_EVERY == 0:
             update_target(agents["current"], agents["target"])
-            # Save the model checkpoint - for single "representative agent"
-            torch.save(agents["current"].state_dict(), params.agent_fname)
 
-    return log
+        if ep_id % SAVE_EVERY == 0:
+            # Save the model checkpoint - for single "representative agent"
+            torch.save(agents["current"].state_dict(), AGENT_FNAME)
+
+    return
 
 
 if __name__ == "__main__":
