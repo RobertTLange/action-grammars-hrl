@@ -16,7 +16,11 @@ def run_learning(args):
 
     # Set the GPU device on which to run the agent
     USE_CUDA = torch.cuda.is_available()
-    if USE_CUDA: torch.cuda.set_device(args.device_id)
+    if USE_CUDA:
+        torch.cuda.set_device(args.device_id)
+        print("USING CUDA DEVICE {}".format(args.device_id))
+    else:
+        print("USING CPU")
     Variable = lambda *args, **kwargs: autograd.Variable(*args, **kwargs).cuda() if USE_CUDA else autograd.Variable(*args, **kwargs)
     start = time.time()
 
@@ -55,12 +59,10 @@ def run_learning(args):
         epsilon = epsilon_by_episode(ep_id + 1, EPS_START, EPS_STOP, EPS_DECAY)
 
         obs = env.reset()
-        episode_rew = 0
 
         for j in range(MAX_STEPS):
             action = agents["current"].act(obs.flatten(), epsilon)
             next_obs, rew, done, _  = env.step(action)
-            episode_rew += rew
 
             # Push transition to ER Buffer
             replay_buffer.push(ep_id, j+1, obs, action,
@@ -130,6 +132,7 @@ def run_multiple_times(args):
     df_means = by_row_index.mean()
     df_means.to_csv(str(args.RUN_TIMES) + "_RUNS_" + args.STATS_FNAME)
     return df_means
+
 
 if __name__ == "__main__":
     args = command_line_dqn()

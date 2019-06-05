@@ -2,10 +2,52 @@ import time
 import gym
 import gym_hanoi
 import numpy as np
+import pandas as pd
+import argparse
 from collections import deque
+import copy
+
 
 from agents.q_agent import Agent_Q
 from agents.smdp_q_agent import SMDP_Agent_Q, Macro
+
+def command_line_towers():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",
+                        default=100, type=int,
+                        help='Rollout test performance after # batch updates.')
+    parser.add_argument('-n_runs', '--RUN_TIMES', action="store",
+                        default=1, type=int,
+                        help='# Times to run agent learning')
+    parser.add_argument('-n_eps', '--NUM_EPISODES', action="store",
+                        default=100, type=int,
+                        help='# Epochs to train for')
+    parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",
+                        default=5, type=int,
+                        help='# rollouts for tracking learning progrees')
+    parser.add_argument('-v', '--VERBOSE', action="store_true", default=False,
+                        help='Get training progress printed out')
+
+
+    parser.add_argument('-n_disks', '--N_DISKS', action="store",
+                        default=4, type=int,
+                        help='# Disks Hanoi Environment')
+    parser.add_argument('-l_type', '--LEARN_TYPE', action="store",
+                        default="Q-Learning", type=str, help='Type of learning algo')
+    parser.add_argument('-stats_file', '--STATS_FNAME', action="store",
+                        default="TOH.csv", type=str,
+                        help='Path to store stats of MLP agent')
+    return parser.parse_args()
+
+
+class DotDic(dict):
+    # Helper module to load in parameters from json and easily call them
+    __getattr__ = dict.get
+    __setattr__ = dict.__setitem__
+    __delattr__ = dict.__delitem__
+
+    def __deepcopy__(self, memo=None):
+        return DotDic(copy.deepcopy(dict(self), memo=memo))
 
 
 class ReplayBuffer(object):
@@ -97,54 +139,55 @@ def get_macros_from_productions(env, productions):
         macros.append(Macro(env, productions[i]))
     return macros
 
-def greedy_eval(env, agent, gamma, max_steps, log_episodes):
-    rewards = []
+
+def get_logging_stats(opt_counter, agent, GAMMA,
+                      N_DISKS, MAX_STEPS, NUM_ROLLOUTS):
     steps = []
-    successes = 0
+    rew = []
 
-    for i in range(log_episodes):
-        cur_state = env.reset()
-        reward_temp = []
-        stp_temp = 0
+    for i in range(NUM_ROLLOUTS):
+        step_temp, reward_temp, buffer = rollout_episode(agent, MAX_STEPS,
+                                                         N_DISKS, GAMMA)
+        steps.append(step_temp)
+        rew.append(reward_temp)
 
-        while stp_temp <= max_steps:
-            action = agent.greedy_action(cur_state)
-            if action > 5:
-                next_state, reward, done, _ = macro_step(action, cur_state, agent,
-                                                         env, None, i)
-            else:
-                next_state, reward, done, _ = env.step(action)
-            if type(reward) != list:
-                reward = [reward]
+    steps = np.array(steps)
+    rew = np.array(rew)
 
-            reward_temp.extend(reward)
-            cur_state = next_state
-            stp_temp += len(reward)
+    reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
+                                         "rew_median",
+                                         "rew_10th_p", "rew_90th_p"])
 
-            if done:
-                rewards.append(discounted_return(reward_temp, gamma))
-                steps.append(stp_temp)
-                successes += 1
-                break
-    avg_steps = np.mean(steps) if len(steps) > 0 else max_steps
-    sd_steps = np.std(steps) if len(steps) > 0 else 0
-    avg_rewards = np.mean(rewards) if len(rewards) > 0 else 0
-    sd_rewards = np.std(rewards) if len(rewards) > 0 else 0
+    steps_stats = pd.DataFrame(columns=["opt_counter", "steps_mean", "steps_sd",
+                                        "steps_median",
+                                        "steps_10th_p", "steps_90th_p"])
 
-    return avg_steps, sd_steps, avg_rewards, sd_rewards, successes/log_episodes
+    reward_stats.loc[0] = [opt_counter, rew.mean(), rew.std(), np.median(rew),
+                           np.percentile(rew, 10), np.percentile(rew, 90)]
+
+    steps_stats.loc[0] = [opt_counter, steps.mean(), steps.std(), np.median(steps),
+                         np.percentile(steps, 10), np.percentile(steps, 90)]
+
+
+    return reward_stats, steps_stats
 
 
 action_to_letter = {0: "a", 1: "b", 2: "c",
                     3: "d", 4: "e", 5: "f"}
 
 
-def get_rollout_policy(env, agent, max_steps,
-                       record_macros=False, grammar=False):
+def rollout_episode(agent, MAX_STEPS, N_DISKS, GAMMA,
+                    record_macros=False, grammar=False):
+
+    env = gym.make("Hanoi-v0")
+    env.set_env_parameters(N_DISKS, env_noise=0, verbose=False)
+    er_buffer_temp = ReplayBuffer(MAX_STEPS, record_macros)
+
     cur_state = env.reset()
+    reward_temp = []
+    steps = 0
 
-    er_buffer_temp = ReplayBuffer(max_steps, record_macros)
-
-    for s in range(max_steps):
+    for s in range(MAX_STEPS):
         action = agent.greedy_action(cur_state)
         if action > 5:
             next_state, reward, done, _ = macro_step(action, cur_state, agent,
@@ -152,24 +195,35 @@ def get_rollout_policy(env, agent, max_steps,
         else:
             next_state, reward, done, _ = env.step(action)
 
-        er_buffer_temp.push_policy(s, cur_state, action, next_state)
+        if type(reward) != list:
+            reward = [reward]
 
+        er_buffer_temp.push(0, cur_state, action,
+                            discounted_return(reward, GAMMA),
+                            next_state, done)
+
+        reward_temp.extend(reward)
         cur_state = next_state
-        if done: break
+        steps += len(reward)
+        if done:
+            break
 
-    if grammar:
-        sentence = []
-        for i in range(len(er_buffer_temp.buffer)):
-            action = er_buffer_temp.buffer[i][2]
-            if action > 5:
-                macro_id = action-6
-                for j in range(len(agent.macros[macro_id].action_seq)):
-                    sentence.append(action_to_letter[agent.macros[macro_id].action_seq[j]])
-            else:
-                sentence.append(action_to_letter[action])
-        return ''.join(sentence)
-    else:
-        return er_buffer_temp.buffer
+    episode_rew = discounted_return(reward_temp, GAMMA)
+    return steps, episode_rew, er_buffer_temp.buffer
+
+    # if grammar:
+    #     sentence = []
+    #     for i in range(len(er_buffer_temp.buffer)):
+    #         action = er_buffer_temp.buffer[i][2]
+    #         if action > 5:
+    #             macro_id = action-6
+    #             for j in range(len(agent.macros[macro_id].action_seq)):
+    #                 sentence.append(action_to_letter[agent.macros[macro_id].action_seq[j]])
+    #         else:
+    #             sentence.append(action_to_letter[action])
+    #     return ''.join(sentence)
+    # else:
+    #     return er_buffer_temp.buffer
 
 
 def macro_step(action, state, agent, env, er_buffer, ep_id):
