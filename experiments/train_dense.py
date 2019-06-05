@@ -41,10 +41,10 @@ def main(args):
     replay_buffer = ReplayBuffer(capacity=5000)
 
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
-                                         "rew_median", "rew_10th_P", "rew_90th_p"])
+                                         "rew_median", "rew_10th_p", "rew_90th_p"])
 
     step_stats = pd.DataFrame(columns=["opt_counter", "steps_mean", "steps_sd",
-                                       "steps_median", "steps_10th_P", "steps_90th_p"])
+                                       "steps_median", "steps_10th_p", "steps_90th_p"])
 
     # Initialize optimization update counter and environment
     opt_counter = 0
@@ -85,10 +85,10 @@ def main(args):
                 if VERBOSE:
                     stop = time.time()
                     print(log_template.format(ep_id, stop-start,
-                                               r_stats.loc[0, "rew_median"],
-                                               r_stats.loc[0, "rew_mean"],
-                                               s_stats.loc[0, "steps_median"],
-                                               s_stats.loc[0, "steps_mean"]))
+                                              r_stats.loc[0, "rew_median"],
+                                              r_stats.loc[0, "rew_mean"],
+                                              s_stats.loc[0, "steps_median"],
+                                              s_stats.loc[0, "steps_mean"]))
                     start = time.time()
 
             if (opt_counter+1) % UPDATE_EVERY == 0:

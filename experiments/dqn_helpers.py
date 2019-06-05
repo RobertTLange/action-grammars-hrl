@@ -157,11 +157,11 @@ def get_logging_stats(opt_counter, agents, GAMMA, NUM_ROLLOUTS, MAX_STEPS):
 
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
                                          "rew_median",
-                                         "rew_10th_P", "rew_90th_p"])
+                                         "rew_10th_p", "rew_90th_p"])
 
     steps_stats = pd.DataFrame(columns=["opt_counter", "steps_mean", "steps_sd",
                                         "steps_median",
-                                        "steps_10th_P", "steps_90th_p"])
+                                        "steps_10th_p", "steps_90th_p"])
 
     reward_stats.loc[0] = [opt_counter, rew.mean(), rew.std(), np.median(rew),
                            np.percentile(rew, 10), np.percentile(rew, 90)]
