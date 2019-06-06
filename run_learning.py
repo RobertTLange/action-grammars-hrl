@@ -19,6 +19,8 @@ np.random.seed(0)
 
 def run_learning(args):
     LEARN_TYPE = args.LEARN_TYPE
+    TRANSFER_DISTANCE = args.TRANSFER_DISTANCE
+
     N_DISKS = args.N_DISKS
     NUM_ROLLOUTS = args.NUM_ROLLOUTS
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
@@ -48,8 +50,7 @@ def run_learning(args):
         macros = get_optimal_macros(env, N_DISKS, "Sequitur")
         agent = SMDP_Agent_Q(env, macros)
     elif LEARN_TYPE == "Transfer-SMDP-Q-Learning":
-        macros = get_optimal_macros(env,
-                                    N_DISKS - transfer_distance,
+        macros = get_optimal_macros(env, N_DISKS - TRANSFER_DISTANCE,
                                     "Sequitur")
         agent = SMDP_Agent_Q(env, macros)
 
@@ -88,7 +89,12 @@ def run_learning(args):
     df_concat = pd.concat(df_across_runs)
     by_row_index = df_concat.groupby(df_concat.index)
     df_means = by_row_index.mean()
-    df_means.to_csv(str(args.RUN_TIMES) + "_RUNS_" + str(args.N_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + args.STATS_FNAME)
+
+    if LEARN_TYPE == "Transfer-SMDP-Q-Learning":
+        df_means.to_csv("results/" + str(args.RUN_TIMES) + "_RUNS_" + str(args.N_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + str(TRANSFER_DISTANCE)+ "_"+ args.STATS_FNAME)
+    else:
+        df_means.to_csv("results/" + str(args.RUN_TIMES) + "_RUNS_" + str(args.N_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + args.STATS_FNAME)
+
     return df_means
 
 

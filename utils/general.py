@@ -37,6 +37,9 @@ def command_line_towers():
                         help='# Disks Hanoi Environment')
     parser.add_argument('-l_type', '--LEARN_TYPE', action="store",
                         default="Q-Learning", type=str, help='Type of learning algo')
+    parser.add_argument('-t_dist', '--TRANSFER_DISTANCE', action="store",
+                        default=1, type=int,
+                        help='# Disks Distance in optimal Grammar')
     parser.add_argument('-stats_file', '--STATS_FNAME', action="store",
                         default="TOH.csv", type=str,
                         help='Path to store stats of MLP agent')
@@ -192,7 +195,7 @@ def rollout_episode(agent, MAX_STEPS, N_DISKS, GAMMA,
     steps = 0
 
     for s in range(MAX_STEPS):
-        action = agent.greedy_action(cur_state)
+        action = agent.epsilon_greedy_action(cur_state, 0.05)
         if action > 5:
             next_state, reward, done, _ = macro_step(action, cur_state, agent,
                                                      env, None, 0)

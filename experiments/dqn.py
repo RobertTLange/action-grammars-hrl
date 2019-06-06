@@ -46,6 +46,34 @@ def init_agent(model, L_RATE, USE_CUDA, load_checkpoint_path=None):
     return agents, optimizers
 
 
+class MLP_DQN(nn.Module):
+    def __init__(self):
+        super(MLP_DQN, self).__init__()
+
+        num_inputs = 10*20*6
+        self.action_space_size = 4
+
+        self.layers = nn.Sequential(
+            nn.Linear(num_inputs, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, self.action_space_size)
+        )
+
+    def forward(self, x):
+        return self.layers(x)
+
+    def act(self, state, epsilon):
+        if random.random() > epsilon:
+            state   = Variable(torch.FloatTensor(state).unsqueeze(0), volatile=True)
+            q_value = self.forward(state)
+            action  = q_value.max(1)[1].data[0]
+        else:
+            action = random.randrange(self.action_space_size)
+        return action
+
+
 class MLP_DDQN(nn.Module):
     def __init__(self):
         super(MLP_DDQN, self).__init__()

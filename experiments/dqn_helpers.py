@@ -53,8 +53,8 @@ def command_line_dqn():
 
     parser.add_argument('-train_batch', '--TRAIN_BATCH_SIZE', action="store",
                         default=32, type=int, help='# images in training batch')
-    parser.add_argument('-model', '--MODEL_TYPE', action="store",
-                        default="architecture_1", type=str, help='FKP model')
+    parser.add_argument('-agent', '--AGENT', action="store",
+                        default="MLP-DQN", type=str, help='Agent model')
 
 
     parser.add_argument('-device', '--device_id', action="store",
@@ -71,30 +71,14 @@ def command_line_dqn():
 class ReplayBuffer(object):
     def __init__(self, capacity, record_macros=False):
         self.buffer = deque(maxlen=capacity)
-        self.record_macros = record_macros
 
     def push(self, ep_id, step, state, action,
-             reward, next_state, done, macro=None):
-        if self.record_macros:
-            self.buffer.append((ep_id, step, state, action, macro,
-                                reward, next_state, done))
-        else:
-            self.buffer.append((ep_id, step, state, action,
-                                reward, next_state, done))
-
-    def push_policy(self, ep_id, state, action, next_state):
-        state = state
-        next_state = next_state
-
-        if self.record_macros:
-            self.buffer.append((ep_id, state, action, macro, next_state))
-        else:
-            self.buffer.append((ep_id, state, action, next_state))
+             reward, next_state, done):
+        self.buffer.append((ep_id, step, state, action, reward, next_state, done))
 
     def sample(self, batch_size):
-        if not self.record_macros:
-            ep_id, step, state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
-            return np.stack(state), action, reward, np.stack(next_state), done
+        ep_id, step, state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
+        return np.stack(state), action, reward, np.stack(next_state), done
 
     def __len__(self):
         return len(self.buffer)

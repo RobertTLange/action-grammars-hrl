@@ -105,5 +105,5 @@ def q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
     df_to_save = pd.concat([reward_stats, step_stats], axis=1)
     df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
     df_to_save = df_to_save.reset_index()
-    df_to_save.to_csv(STATS_FNAME)
+    df_to_save.to_csv("results/" + STATS_FNAME)
     return df_to_save

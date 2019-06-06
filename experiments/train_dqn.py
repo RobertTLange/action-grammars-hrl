@@ -7,11 +7,11 @@ import gridworld
 import torch
 import torch.autograd as autograd
 
-from dueling_dqn import MLP_DDQN, init_agent
+from dqn import MLP_DQN, MLP_DDQN, init_agent
 from dqn_helpers import command_line_dqn, ReplayBuffer, update_target, epsilon_by_episode, compute_td_loss, get_logging_stats
 
 
-def run_learning(args):
+def run_dqn_learning(args):
     log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
 
     # Set the GPU device on which to run the agent
@@ -41,7 +41,11 @@ def run_learning(args):
     STATS_FNAME = args.STATS_FNAME
 
     # Setup agent, replay replay_buffer, logging stats df
-    agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA)
+    if args.AGENT == "MLP-DQN":
+        agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA)
+    elif args.AGENT == "MLP-Dueling-DQN":
+        agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA)
+
     replay_buffer = ReplayBuffer(capacity=5000)
 
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
@@ -60,18 +64,21 @@ def run_learning(args):
 
         obs = env.reset()
 
-        for j in range(MAX_STEPS):
+        steps = 0
+        while steps < MAX_STEPS:
             action = agents["current"].act(obs.flatten(), epsilon)
             next_obs, rew, done, _  = env.step(action)
+            steps += 1
 
             # Push transition to ER Buffer
-            replay_buffer.push(ep_id, j+1, obs, action,
+            replay_buffer.push(ep_id, steps, obs, action,
                                rew, next_obs, done)
 
             if len(replay_buffer) > TRAIN_BATCH_SIZE:
                 opt_counter += 1
                 loss = compute_td_loss(agents, optimizer, replay_buffer,
                                        TRAIN_BATCH_SIZE, GAMMA, Variable)
+
 
             # Go to next episode if current one terminated or update obs
             if done: break
@@ -114,13 +121,14 @@ def run_learning(args):
     return df_to_save
 
 
-def run_multiple_times(args):
+def run_multiple_times(args, run_fct):
 
     df_across_runs = []
-    print("START RUNNING AGENT LEARNING FOR {} TIMES".format(args.RUN_TIMES))
+    print("START RUNNING {} AGENT LEARNING FOR {} TIMES".format(args.AGENT,
+                                                                args.RUN_TIMES))
     for t in range(args.RUN_TIMES):
         start_t = time.time()
-        df_temp = run_learning(args)
+        df_temp = run_fct(args)
         df_across_runs.append(df_temp)
         total_t = time.time() - start_t
         print("Done training {}/{} runs after {:.2f} Secs".format(t+1,
@@ -138,7 +146,7 @@ if __name__ == "__main__":
     args = command_line_dqn()
 
     if args.RUN_TIMES == 1:
-        print("START RUNNING AGENT LEARNING FOR 1 TIME")
-        run_learning(args)
+        print("START RUNNING {} AGENT LEARNING FOR 1 TIME".format(args.AGENT))
+        run_dqn_learning(args)
     else:
-        run_multiple_times(args)
+        run_multiple_times(args, run_dqn_learning)
