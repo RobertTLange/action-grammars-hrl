@@ -127,7 +127,7 @@ The gridworld environment, on the other hand, provides a non-sparse reward desig
 
 $$\mathcal{A}^{\hat{G}} = \mathcal{A} \cup \mathcal{M}^{2-Seq} = \mathcal{A} \cup \{bafbcd, baf, ec, bc\}$$
 
-The left-hand side of figure \ref{fig:expert_grammar}\rob{Add nice figure with larger fontsize and per update - more variation} displays learning results for different SMDP-Q-Learning agents with macro-actions defined by the production rules inferred from a single trace of the optimal policy. The grammar macros accelerate the learning progress of the agent. Furthermore, the variance of rollouts is reduced due to an increased robustness related to the temporal compression of the sequential problem. 
+The left-hand side of figure \ref{fig:expert_grammar_toh}\rob{Add nice figure with larger fontsize and per update - more variation} displays learning results for different SMDP-Q-Learning agents with macro-actions defined by the production rules inferred from a single trace of the optimal policy. The grammar macros accelerate the learning progress of the agent. Furthermore, the variance of rollouts is reduced due to an increased robustness related to the temporal compression of the sequential problem. 
 The right-hand side, on the other hand, assesses how well the grammars learned for a more simplistic environment (4 disks) generalizes to a more complex setting (5 disks). Again, the HRL agent is able to exploit the general grammar innate to the ToH problem.  
 
 \begin{figure}[H]
@@ -137,8 +137,19 @@ The right-hand side, on the other hand, assesses how well the grammars learned f
 \minipage{0.49\linewidth}
   \includegraphics[width=\linewidth]{figures/mlp_ddqn_learning_curve}
 \endminipage\hfill
-\caption{Expert \& Transfer Grammar Experiments: \textbf{Left.} Expert Grammar. \textbf{Right.} Transfer Grammar. Averaged over 5 random seed. Median, 10th and 90th percentile.}
-\label{fig:expert_grammar}
+\caption{Expert \& Transfer Grammar Experiments (ToH): \textbf{Left.} Expert Grammar. \textbf{Right.} Transfer Grammar. Averaged over 5 random seed. Median, 10th and 90th percentile.}
+\label{fig:expert_grammar_toh}
+\end{figure}
+
+\begin{figure}[H]
+\minipage{0.49\linewidth}
+  \includegraphics[width=\linewidth]{figures/mlp_ddqn_learning_curve}
+\endminipage\hfill
+\minipage{0.49\linewidth}
+  \includegraphics[width=\linewidth]{figures/mlp_ddqn_learning_curve}
+\endminipage\hfill
+\caption{Expert \& Transfer Grammar Experiments (Gridworld): \textbf{Left.} Expert Grammar. \textbf{Right.} Transfer Grammar. Averaged over 5 random seed. Median, 10th and 90th percentile.}
+\label{fig:expert_grammar_grid}
 \end{figure}
 
 %-----------------------------------

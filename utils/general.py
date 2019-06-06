@@ -16,6 +16,9 @@ def command_line_towers():
     parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",
                         default=100, type=int,
                         help='Rollout test performance after # batch updates.')
+    parser.add_argument('-print', '--PRINT_EVERY', action="store",
+                        default=100, type=int,
+                        help='#Episodes after which to print.')
     parser.add_argument('-n_runs', '--RUN_TIMES', action="store",
                         default=1, type=int,
                         help='# Times to run agent learning')
@@ -136,7 +139,8 @@ def get_optimal_macros(env, N, cfg_type):
 def get_macros_from_productions(env, productions):
     macros = []
     for i in range(len(productions)):
-        macros.append(Macro(env, productions[i]))
+
+        macros.append(Macro(productions[i]))
     return macros
 
 
@@ -232,7 +236,7 @@ def macro_step(action, state, agent, env, er_buffer, ep_id):
     rewards = []
 
     while agent.macros[macro_id].active:
-        action = agent.macros[macro_id].follow_macro()
+        action = agent.macros[macro_id].follow_macro(env)
 
         if action is not None:
             # Macro action is allowed to take place
@@ -244,8 +248,9 @@ def macro_step(action, state, agent, env, er_buffer, ep_id):
             state = next_state
             if done: break
         else:
-            # Macro action is not valid
+            # Macro action is not valid - return -1 reward
             next_state = state
+            rewards.append(-1)
             done = False
             _ = None
             break

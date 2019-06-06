@@ -10,57 +10,61 @@ from agents.q_agent import QTable, Agent_Q
 from utils.general import *
 
 
-def smdp_q_learning_update(gamma, alpha, lambd, q_func, eligibility,
+def smdp_q_learning_update(GAMMA, ALPHA, LAMBDA, q_func, eligibility,
                            cur_state, action, next_state, reward, done, stp,
                            old_greedy_choice=None, old_action=None, old_state=None):
     if done:
-        target = discounted_return(reward, gamma)
+        target = discounted_return(reward, GAMMA)
     else:
-        target = discounted_return(reward, gamma) + gamma**len(reward) * np.max(q_func(next_state))
+        target = discounted_return(reward, GAMMA) + GAMMA**len(reward) * np.max(q_func(next_state))
 
     if stp > 0:
         if old_greedy_choice == action:
-            eligibility(old_state)[old_action] *= gamma*lambd
+            eligibility(old_state)[old_action] *= GAMMA*LAMBDA
         else:
             eligibility(old_state)[old_action] = 0
 
     eligibility(cur_state)[action] += 1
 
     td_err = target - q_func(cur_state)[action]
-    Q_new = q_func.table + alpha* td_err * eligibility.table
+    Q_new = q_func.table + ALPHA * td_err * eligibility.table
 
     q_func.update_all(Q_new)
     return eligibility, td_err
 
 
-def smdp_q_learning(env, agent, num_episodes, max_steps,
-                    gamma, alpha, lambd, epsilon,
-                    log_freq, log_episodes, verbose):
+def smdp_q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
+                    GAMMA, ALPHA, LAMBDA, EPSILON,
+                    ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME, PRINT_EVERY,
+                    VERBOSE):
 
-    log_template = "Ep: {:>2} | Avg/Std Steps: {:.2f}/{:.2f} | Avg/Std Ret: {:.2f}/{:.2f} | Success R: {:.2f}"
-    log_counter = 0
-    hist = np.zeros((math.ceil(num_episodes/log_freq), 6))
+    start = time.time()
+    log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
+
+    reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
+                                         "rew_median", "rew_10th_p", "rew_90th_p"])
+
+    step_stats = pd.DataFrame(columns=["opt_counter", "steps_mean", "steps_sd",
+                                       "steps_median", "steps_10th_p", "steps_90th_p"])
 
     # Init Replay Buffer
-    er_buffer = ReplayBuffer(num_episodes*max_steps, record_macros=True)
+    er_buffer = ReplayBuffer(NUM_EPISODES*MAX_STEPS, record_macros=True)
 
-    for ep_id in range(num_episodes):
+    update_counter = 0
+    env = gym.make("Hanoi-v0")
+    env.set_env_parameters(N_DISKS, env_noise=0, verbose=False)
+
+    for ep_id in range(NUM_EPISODES):
 
         state = env.reset()
-
-        stp = 0
-        tot_td = 0
-        rewards = []
-
-        eligibility = QTable(np.zeros(env.num_disks*(3, ) + (6 + len(agent.macros),)))
+        eligibility = QTable(np.zeros(N_DISKS*(3, ) + (6 + len(agent.macros),)))
 
         old_greedy_choice = None
         old_action = None
         old_state = None
 
-        while stp <= max_steps:
-            action = agent.epsilon_greedy_action(state, epsilon)
-            # print(ep_id, state, action)
+        for i in range(MAX_STEPS):
+            action = agent.epsilon_greedy_action(state, EPSILON)
             if action > 5:
                 next_state, reward, done, _ = macro_step(action, state, agent,
                                                          env, er_buffer,
@@ -74,11 +78,13 @@ def smdp_q_learning(env, agent, num_episodes, max_steps,
             greedy_choice = agent.greedy_action(next_state)
 
             # Update value function
-            eligibility, tde = smdp_q_learning_update(gamma, alpha, lambd,
-                                                      agent.q_func,
-                                                 eligibility, state, action,
-                                                 next_state, reward, done, stp,
-                                                 old_greedy_choice, old_action, old_state)
+            eligibility, tde = smdp_q_learning_update(GAMMA, ALPHA, LAMBDA,
+                                                      agent.q_func,  eligibility,
+                                                      state, action, next_state,
+                                                      reward, done, i,
+                                                      old_greedy_choice, old_action,
+                                                      old_state)
+            update_counter += 1
 
             # Update variables
             old_state = state
@@ -86,25 +92,31 @@ def smdp_q_learning(env, agent, num_episodes, max_steps,
             old_greedy_choice = greedy_choice
             state = next_state
 
-            # Update counters
-            stp += len(reward)
-            tot_td += tde
-            rewards.append(reward)
+            if done:
+                break
 
-            if done: break
+            if (update_counter+1) % ROLLOUT_EVERY == 0:
+                r_stats, s_stats = get_logging_stats(update_counter, agent, GAMMA,
+                                                     N_DISKS, MAX_STEPS, NUM_ROLLOUTS)
 
-        if ep_id % log_freq == 0:
-            avg_steps, sd_steps, avg_ret, sd_ret, success_rate = greedy_eval(env, agent, gamma,
-                                                                             max_steps, log_episodes)
-            hist[log_counter,:] = np.array([ep_id, avg_steps, sd_steps,
-                                            avg_ret, sd_ret, success_rate])
-            log_counter += 1
+                reward_stats = pd.concat([reward_stats, r_stats], axis=0)
+                step_stats = pd.concat([step_stats, s_stats], axis=0)
 
-            if verbose:
-                print(log_template.format(ep_id + 1, avg_steps, sd_steps,
-                                          avg_ret, sd_steps, success_rate))
+        if VERBOSE and ep_id % PRINT_EVERY == 0:
+            stop = time.time()
+            print(log_template.format(ep_id, stop-start,
+                                      r_stats.loc[0, "rew_median"],
+                                      r_stats.loc[0, "rew_mean"],
+                                      s_stats.loc[0, "steps_median"],
+                                      s_stats.loc[0, "steps_mean"]))
+            start = time.time()
 
-    return hist, er_buffer
+    # Save the logging dataframe
+    df_to_save = pd.concat([reward_stats, step_stats], axis=1)
+    df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
+    df_to_save = df_to_save.reset_index()
+    df_to_save.to_csv(STATS_FNAME)
+    return df_to_save
 
 
 def smdp_q_online_learning(env, init_q_eps, inter_update_eps,

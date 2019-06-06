@@ -9,22 +9,22 @@ def learning_parameters(l_type, NUM_DISKS=4):
                   "EPSILON": 0.1}  # Exploration parameter
 
     elif l_type == "Imitation-SMDP-Q-Learning":
-        params = {"alpha": 0.8,  # Learning rate
-                  "gamma": 0.95,  # Discount factor
-                  "lambd": 0.,  # TD(lambda) exponential decay factor
-                  "epsilon": 0.1}  # Exploration parameter
+        params = {"ALPHA": 0.8,  # Learning rate
+                  "GAMMA": 0.95,  # Discount factor
+                  "LAMBDA": 0.,  # TD(lambda) exponential decay factor
+                  "EPSILON": 0.1}  # Exploration parameter
 
     elif l_type == "Transfer-SMDP-Q-Learning":
-        params = {"alpha": 0.8,  # Learning rate
-                  "gamma": 0.95,  # Discount factor
-                  "lambd": 0.,  # TD(lambda) exponential decay factor
-                  "epsilon": 0.1}  # Exploration parameter
+        params = {"ALPHA": 0.8,  # Learning rate
+                  "GAMMA": 0.95,  # Discount factor
+                  "LAMBDA": 0.,  # TD(lambda) exponential decay factor
+                  "EPSILON": 0.1}  # Exploration parameter
 
     elif l_type == "Online-SMDP-Q-Learning":
-        params = {"alpha": 0.8,  # Learning rate
-                  "gamma": 0.95,  # Discount factor
-                  "lambd": 0.,  # TD(lambda) exponential decay factor
-                  "epsilon": 0.1 # Exploration parameter
+        params = {"ALPHA": 0.8,  # Learning rate
+                  "GAMMA": 0.95,  # Discount factor
+                  "LAMBDA": 0.,  # TD(lambda) exponential decay factor
+                  "EPSILON": 0.1 # Exploration parameter
                   }
 
         if num_disks == 4:

@@ -33,7 +33,8 @@ def q_learning_update(GAMMA, L_RATE, LAMBDA, q_func, eligibility,
 
 def q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
                GAMMA, L_RATE, LAMBDA, EPSILON,
-               ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME, VERBOSE):
+               ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME, PRINT_EVERY,
+               VERBOSE):
     start = time.time()
     log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
 
@@ -91,14 +92,14 @@ def q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
                 reward_stats = pd.concat([reward_stats, r_stats], axis=0)
                 step_stats = pd.concat([step_stats, s_stats], axis=0)
 
-                if VERBOSE:
-                    stop = time.time()
-                    print(log_template.format(ep_id, stop-start,
-                                              r_stats.loc[0, "rew_median"],
-                                              r_stats.loc[0, "rew_mean"],
-                                              s_stats.loc[0, "steps_median"],
-                                              s_stats.loc[0, "steps_mean"]))
-                    start = time.time()
+        if VERBOSE and ep_id % PRINT_EVERY == 0:
+            stop = time.time()
+            print(log_template.format(ep_id, stop-start,
+                                      r_stats.loc[0, "rew_median"],
+                                      r_stats.loc[0, "rew_mean"],
+                                      s_stats.loc[0, "steps_median"],
+                                      s_stats.loc[0, "steps_mean"]))
+            start = time.time()
 
     # Save the logging dataframe
     df_to_save = pd.concat([reward_stats, step_stats], axis=1)

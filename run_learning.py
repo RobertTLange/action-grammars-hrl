@@ -1,5 +1,6 @@
 import time
 import numpy as np
+import pandas as pd
 
 import gym
 import gym_hanoi
@@ -21,6 +22,7 @@ def run_learning(args):
     N_DISKS = args.N_DISKS
     NUM_ROLLOUTS = args.NUM_ROLLOUTS
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
+    PRINT_EVERY = args.PRINT_EVERY
     VERBOSE = args.VERBOSE
 
     RUN_TIMES = args.RUN_TIMES
@@ -43,11 +45,11 @@ def run_learning(args):
     if LEARN_TYPE == "Q-Learning":
         agent = Agent_Q(env)
     elif LEARN_TYPE == "Imitation-SMDP-Q-Learning":
-        macros = get_optimal_macros(env, num_disks, "Sequitur")
+        macros = get_optimal_macros(env, N_DISKS, "Sequitur")
         agent = SMDP_Agent_Q(env, macros)
     elif LEARN_TYPE == "Transfer-SMDP-Q-Learning":
         macros = get_optimal_macros(env,
-                                    num_disks - transfer_distance,
+                                    N_DISKS - transfer_distance,
                                     "Sequitur")
         agent = SMDP_Agent_Q(env, macros)
 
@@ -60,21 +62,14 @@ def run_learning(args):
         if LEARN_TYPE == "Q-Learning":
             df_temp = q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
                                  GAMMA, ALPHA, LAMBDA, EPSILON,
-                                 ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME, VERBOSE)
+                                 ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME,
+                                 PRINT_EVERY, VERBOSE)
 
-        elif LEARN_TYPE == "Imitation-SMDP-Q-Learning":
-            df_temp = smdp_q_learning(env, agent, num_episodes,
-                                              max_steps, **params,
-                                              log_freq=log_freq,
-                                              log_episodes=log_episodes,
-                                              verbose=False)
-
-        elif LEARN_TYPE == "Transfer-SMDP-Q-Learning":
-            df_temp = smdp_q_learning(env, agent, num_episodes,
-                                              max_steps, **params,
-                                              log_freq=log_freq,
-                                              log_episodes=log_episodes,
-                                              verbose=False)
+        elif LEARN_TYPE == "Imitation-SMDP-Q-Learning" or LEARN_TYPE == "Transfer-SMDP-Q-Learning":
+            df_temp = smdp_q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
+                                      GAMMA, ALPHA, LAMBDA, EPSILON,
+                                      ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME,
+                                      PRINT_EVERY, VERBOSE)
 
         elif LEARN_TYPE == "Online-SMDP-Q-Learning":
             df_temp = smdp_q_online_learning(env, **params,
@@ -93,7 +88,7 @@ def run_learning(args):
     df_concat = pd.concat(df_across_runs)
     by_row_index = df_concat.groupby(df_concat.index)
     df_means = by_row_index.mean()
-    df_means.to_csv(str(args.RUN_TIMES) + "_RUNS_" + str(args.NUM_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + args.STATS_FNAME)
+    df_means.to_csv(str(args.RUN_TIMES) + "_RUNS_" + str(args.N_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + args.STATS_FNAME)
     return df_means
 
 

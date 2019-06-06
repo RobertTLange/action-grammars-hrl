@@ -81,10 +81,9 @@ class GrammarBuffer(object):
 
 
 class Macro():
-    def __init__(self, env, action_seq):
+    def __init__(self, action_seq):
         self.action_seq = action_seq
         self.macro_len = len(self.action_seq)
-        self.env = env
 
         if type(self.action_seq) is str:
             self.action_seq = self.convert_string()
@@ -98,7 +97,8 @@ class Macro():
             macro_actions.append(letter_to_action[let])
         return macro_actions
 
-    def follow_macro(self):
+    def follow_macro(self, env):
+        # Check if primitive action is allowed
         act_temp = self.action_seq[self.current_time]
         self.current_time += 1
 
@@ -106,7 +106,7 @@ class Macro():
             self.active = False
             self.current_time = 0
 
-        if self.env.move_allowed(action_to_move[act_temp]):
+        if env.move_allowed(action_to_move[act_temp]):
             return act_temp
         else:
             self.active = False
