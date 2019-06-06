@@ -33,13 +33,13 @@ def learning_parameters(l_type, NUM_DISKS=4):
             params["num_grammar_updates"] = 12
 
     if NUM_DISKS == 4:
-        params["NUM_EPISODES"] = int(750)
-        params["MAX_STEPS"] = int(500)
+        params["NUM_UPDATES"] = 11000
+        params["MAX_STEPS"] = 500
     elif NUM_DISKS == 5:
-        params["NUM_EPISODES"] = 5000
+        params["NUM_UPDATES"] = 17000
         params["MAX_STEPS"] = 2000
     elif NUM_DISKS == 6:
-        params["NUM_EPISODES"] = 10000
+        params["NUM_UPDATES"] = 600000
         params["MAX_STEPS"] = 5000
 
     return params

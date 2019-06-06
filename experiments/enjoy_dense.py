@@ -31,7 +31,7 @@ def main():
     env = gym.make("dense-v0")
 
     USE_CUDA = torch.cuda.is_available()
-    LOAD_CKPT = "agents/mlp_agent.pt"
+    LOAD_CKPT = "agents/1000_mlp_agent.pt"
     agents, optimizer = init_agent(MLP_DQN, 0, USE_CUDA,
                                    4, LOAD_CKPT)
 
@@ -55,8 +55,8 @@ def main():
             plt.draw()
             plt.axis("off")
             steps += 1
-            if steps == 1:
-                plt.savefig("example_frame.png", dpi=300)
+            # if steps == 1:
+            #     plt.savefig("example_frame.png", dpi=300)
             plt.show()
             #print("action: ", act(obs)[0])
             episode_rew += rew

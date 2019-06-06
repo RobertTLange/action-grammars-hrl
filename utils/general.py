@@ -22,7 +22,7 @@ def command_line_towers():
     parser.add_argument('-n_runs', '--RUN_TIMES', action="store",
                         default=1, type=int,
                         help='# Times to run agent learning')
-    parser.add_argument('-n_eps', '--NUM_EPISODES', action="store",
+    parser.add_argument('-n_upd', '--NUM_UPDATES', action="store",
                         default=100, type=int,
                         help='# Epochs to train for')
     parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",

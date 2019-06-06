@@ -48,9 +48,6 @@ def command_line_dqn():
                         type=float, help='Start Exploration Rate')
     parser.add_argument('-e_stop', '--EPS_STOP', action="store", default=0.01,
                         type=float, help='Start Exploration Rate')
-    parser.add_argument('-e_decay', '--EPS_DECAY', action="store", default=500,
-                        type=float, help='Start Exploration Rate')
-
 
 
     parser.add_argument('-train_batch', '--TRAIN_BATCH_SIZE', action="store",

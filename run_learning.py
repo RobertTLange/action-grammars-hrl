@@ -35,7 +35,7 @@ def run_learning(args):
     GAMMA = params.GAMMA
     LAMBDA = params.LAMBDA
     EPSILON = params.EPSILON
-    NUM_EPISODES = args.NUM_EPISODES
+    NUM_UPDATES = args.NUM_UPDATES
     MAX_STEPS = params.MAX_STEPS
 
     env = gym.make("Hanoi-v0")
@@ -61,13 +61,13 @@ def run_learning(args):
         # Reset values to 0 initialization without having to recompute mov_map
         agent.reset_values()
         if LEARN_TYPE == "Q-Learning":
-            df_temp = q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
+            df_temp = q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                                  GAMMA, ALPHA, LAMBDA, EPSILON,
                                  ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME,
                                  PRINT_EVERY, VERBOSE)
 
         elif LEARN_TYPE == "Imitation-SMDP-Q-Learning" or LEARN_TYPE == "Transfer-SMDP-Q-Learning":
-            df_temp = smdp_q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
+            df_temp = smdp_q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                                       GAMMA, ALPHA, LAMBDA, EPSILON,
                                       ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME,
                                       PRINT_EVERY, VERBOSE)

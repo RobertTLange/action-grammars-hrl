@@ -7,10 +7,12 @@ import gridworld
 import torch
 import torch.autograd as autograd
 
-from dueling_dqn import MLP_DDQN, init_agent
+from dqn import MLP_DQN, MLP_DDQN, init_agent
 from dqn_helpers import ReplayBuffer, update_target, epsilon_by_episode, compute_td_loss, get_logging_stats
-from smdp_helpers import MacroBuffer, macro_action_exec
+from smdp_helpers import MacroBuffer, macro_action_exec, command_line_grammar_dqn, get_macro_from_agent
+from train_dqn import run_multiple_times
 
+SEQ_DIR = "../grammars/sequitur/"
 
 def run_smdp_learning(args):
     log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
@@ -38,13 +40,26 @@ def run_smdp_learning(args):
     UPDATE_EVERY = args.UPDATE_EVERY
     VERBOSE = args.VERBOSE
 
+    AGENT = args.AGENT
     AGENT_FNAME = args.AGENT_FNAME
     STATS_FNAME = args.STATS_FNAME
 
+    # Get macros from expert dqn rollout
+    LOAD_CKPT = args.LOAD_CKPT
+    NUM_MACROS = args.NUM_MACROS
+
+    macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
+                                          AGENT, LOAD_CKPT, SEQ_DIR)
+
+    NUM_ACTIONS = 4 + NUM_MACROS
     # Setup agent, replay_buffer, macro_buffer, logging stats df
-    agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA, NUM_ACTIONS)
+    if AGENT == "MLP-DQN":
+        agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA, NUM_ACTIONS)
+    elif AGENT == "MLP-Dueling-DQN":
+        agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA, NUM_ACTIONS)
+
     replay_buffer = ReplayBuffer(capacity=5000)
-    grammar_buffer = MacroBuffer(capacity=1000)
+    macro_buffer = MacroBuffer(capacity=1000)
 
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
                                          "rew_median", "rew_10th_p", "rew_90th_p"])
@@ -76,7 +91,8 @@ def run_smdp_learning(args):
             else:
                 # Need to execute a macro action
                 macro = macros[action - 4]
-                next_obs, macro_rew, done, _ = macro_action_exec(ep_id, steps,
+                next_obs, macro_rew, done, _ = macro_action_exec(ep_id, obs,
+                                                                 steps,
                                                                  replay_buffer,
                                                                  macro, env,
                                                                  GAMMA)
@@ -118,14 +134,15 @@ def run_smdp_learning(args):
 
             if (opt_counter+1) % SAVE_EVERY == 0:
                 # Save the model checkpoint - for single "representative agent"
-                torch.save(agents["current"].state_dict(), AGENT_FNAME)
+                torch.save(agents["current"].state_dict(), "agents/" + str(NUM_EPISODES) + "_" + AGENT_FNAME)
                 # Save the logging dataframe
                 df_to_save = pd.concat([reward_stats, step_stats], axis=1)
                 df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
-                df_to_save.to_csv(STATS_FNAME)
+                df_to_save.to_csv("results/" + STATS_FNAME)
 
     # Finally save all results!
-    torch.save(agents["current"].state_dict(), AGENT_FNAME)
+    torch.save(agents["current"].state_dict(),
+               "agents/" + str(NUM_EPISODES) + "_" + AGENT_FNAME)
     # Save the logging dataframe
     df_to_save = pd.concat([reward_stats, step_stats], axis=1)
     df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
@@ -135,10 +152,10 @@ def run_smdp_learning(args):
 
 
 if __name__ == "__main__":
-    args = command_line_dqn()
-
-
+    args = command_line_grammar_dqn()
 
     if args.RUN_TIMES == 1:
         print("START RUNNING {} AGENT LEARNING FOR 1 TIME".format(args.AGENT))
         run_smdp_learning(args)
+    else:
+        run_multiple_times(args, run_smdp_learning)

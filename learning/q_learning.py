@@ -31,7 +31,7 @@ def q_learning_update(GAMMA, L_RATE, LAMBDA, q_func, eligibility,
     return eligibility, td_err
 
 
-def q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
+def q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                GAMMA, L_RATE, LAMBDA, EPSILON,
                ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME, PRINT_EVERY,
                VERBOSE):
@@ -48,10 +48,11 @@ def q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
     er_buffer = ReplayBuffer(capacity=NUM_EPISODES*MAX_STEPS)
 
     update_counter = 0
+    ep_id = 0
     env = gym.make("Hanoi-v0")
     env.set_env_parameters(N_DISKS, env_noise=0, verbose=False)
 
-    for ep_id in range(NUM_EPISODES):
+    while update_counter < NUM_UPDATES:
 
         state = env.reset()
         eligibility = QTable(np.zeros(N_DISKS*(3, ) + (6,)))
@@ -92,6 +93,7 @@ def q_learning(agent, N_DISKS, NUM_EPISODES, MAX_STEPS,
                 reward_stats = pd.concat([reward_stats, r_stats], axis=0)
                 step_stats = pd.concat([step_stats, s_stats], axis=0)
 
+        ep_id += 1
         if VERBOSE and ep_id % PRINT_EVERY == 0:
             stop = time.time()
             print(log_template.format(ep_id, stop-start,

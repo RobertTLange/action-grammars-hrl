@@ -26,7 +26,8 @@ def run_dqn_learning(args):
 
     # Extract variables for arguments
     TRAIN_BATCH_SIZE = args.TRAIN_BATCH_SIZE
-    EPS_START, EPS_STOP, EPS_DECAY = args.EPS_START, args.EPS_STOP, args.EPS_DECAY
+    EPS_START, EPS_STOP = args.EPS_START, args.EPS_STOP
+    EPS_DECAY = args.NUM_EPISODES
     GAMMA, L_RATE = args.GAMMA, args.L_RATE
 
     NUM_EPISODES = args.NUM_EPISODES
@@ -98,7 +99,7 @@ def run_dqn_learning(args):
 
             if (opt_counter+1) % SAVE_EVERY == 0:
                 # Save the model checkpoint - for single "representative agent"
-                torch.save(agents["current"].state_dict(), AGENT_FNAME)
+                torch.save(agents["current"].state_dict(), "agents/" + str(NUM_EPISODES) + "_" + AGENT_FNAME)
                 # Save the logging dataframe
                 df_to_save = pd.concat([reward_stats, step_stats], axis=1)
                 df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
@@ -114,7 +115,7 @@ def run_dqn_learning(args):
             start = time.time()
 
     # Finally save all results!
-    torch.save(agents["current"].state_dict(), "agents/" + AGENT_FNAME)
+    torch.save(agents["current"].state_dict(), "agents/" + str(NUM_EPISODES) + "_" + AGENT_FNAME)
     # Save the logging dataframe
     df_to_save = pd.concat([reward_stats, step_stats], axis=1)
     df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
