@@ -20,7 +20,6 @@ class run_grammar():
         self.g_type = "sequitur"
 
     def run_sequitur(self):
-        print(os.getcwd(), self.string)
         # Run the Sequitur grammar inferene, outfile results and read them in
         if os.path.exists(self.path_output): os.remove(self.path_output)
         try:
@@ -127,19 +126,24 @@ def get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, seq_dir, k=2):
 
     temp_S = Grammar.S.split("-")
     occ = dict(Counter(temp_S))
+
     for key in primitives:
         try:
             del occ[key]
         except:
             continue
 
+    # If not all macros shall be returned - sort them by occurence -
+    # only return most frequenlty used in encoding of string
     if NUM_MACROS != "all":
         sorted_occ = sorted(occ.items(), key=lambda x: x[1], reverse=True)
-        sorted_occ = sorted_occ[0:no_macros]
+        sorted_occ = sorted_occ[0:NUM_MACROS]
+        counts = [int(m[1]) for m in sorted_occ]
         sorted_macros = [int(m[0]) for m in sorted_occ]
         macros = [Grammar.flat_productions[i] for i in sorted_macros]
     else:
+        counts = list(occ.values())
         macros = Grammar.flat_productions[1:]
 
     os.chdir(original_dir)
-    return macros
+    return macros, counts

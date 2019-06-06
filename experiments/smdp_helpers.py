@@ -101,7 +101,7 @@ def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
 
     SENTENCE = "".join(SENTENCE)
     # Collect actions from rollout into string & call sequitur
-    macros = get_macros(NUM_MACROS, SENTENCE, 4, SEQ_DIR, k=2)
+    macros, counts = get_macros(NUM_MACROS, SENTENCE, 4, SEQ_DIR, k=2)
     return macros, counts
 
 
@@ -113,5 +113,6 @@ if __name__ == "__main__":
     LOAD_CKPT = "agents/mlp_agent.pt"
     SEQ_DIR = "../grammars/sequitur/"
 
-    macros = get_macro_from_agent("all", NUM_ACTIONS, USE_CUDA, AGENT,
-                                  LOAD_CKPT, SEQ_DIR)
+    macros, counts = get_macro_from_agent("all", NUM_ACTIONS, USE_CUDA, AGENT,
+                                          LOAD_CKPT, SEQ_DIR)
+    print(macros, counts)
