@@ -35,7 +35,7 @@ def run_learning(args):
     GAMMA = params.GAMMA
     LAMBDA = params.LAMBDA
     EPSILON = params.EPSILON
-    NUM_EPISODES = params.NUM_EPISODES
+    NUM_EPISODES = args.NUM_EPISODES
     MAX_STEPS = params.MAX_STEPS
 
     env = gym.make("Hanoi-v0")

@@ -41,9 +41,10 @@ def run_smdp_learning(args):
     AGENT_FNAME = args.AGENT_FNAME
     STATS_FNAME = args.STATS_FNAME
 
-    # Setup agent, replay replay_buffer, logging stats df
-    agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA)
+    # Setup agent, replay_buffer, macro_buffer, logging stats df
+    agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA, NUM_ACTIONS)
     replay_buffer = ReplayBuffer(capacity=5000)
+    grammar_buffer = MacroBuffer(capacity=1000)
 
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
                                          "rew_median", "rew_10th_p", "rew_90th_p"])
@@ -64,12 +65,27 @@ def run_smdp_learning(args):
         steps = 0
         while steps < MAX_STEPS:
             action = agents["current"].act(obs.flatten(), epsilon)
-            next_obs, rew, done, _  = env.step(action)
-            steps += 1
 
-            # Push transition to ER Buffer
-            replay_buffer.push(ep_id, steps, obs, action,
-                               rew, next_obs, done)
+            if action < 4:
+                next_obs, rew, done, _  = env.step(action)
+                steps += 1
+
+                # Push transition to ER Buffer
+                replay_buffer.push(ep_id, steps, obs, action,
+                                   rew, next_obs, done)
+            else:
+                # Need to execute a macro action
+                macro = macros[action - 4]
+                next_obs, macro_rew, done, _ = macro_action_exec(ep_id, steps,
+                                                                 replay_buffer,
+                                                                 macro, env,
+                                                                 GAMMA)
+                steps += len(macro)
+                # Push macro transition to ER Buffer
+                macro_buffer.push(ep_id, steps, obs, action,
+                                  macro_rew, next_obs,
+                                  done, len(macro), macro)
+
 
             if len(replay_buffer) > TRAIN_BATCH_SIZE:
                 opt_counter += 1
@@ -116,3 +132,13 @@ def run_smdp_learning(args):
     df_to_save = df_to_save.reset_index()
     df_to_save.to_csv("results/" + STATS_FNAME)
     return df_to_save
+
+
+if __name__ == "__main__":
+    args = command_line_dqn()
+
+
+
+    if args.RUN_TIMES == 1:
+        print("START RUNNING {} AGENT LEARNING FOR 1 TIME".format(args.AGENT))
+        run_smdp_learning(args)

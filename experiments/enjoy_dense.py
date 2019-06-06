@@ -2,11 +2,9 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 import gridworld
-# import tensorflow as tf
-# from baselines import deepq
-# from baselines.common import models
+from dqn import init_agent, MLP_DQN
 from pycolab import rendering
-
+import torch
 
 dirs = "../logs/maze1/gamma08/1/maze.pkl"
 
@@ -31,11 +29,11 @@ def converter(obs):
 
 def main():
     env = gym.make("dense-v0")
-    # act = deepq.learn(
-    #                 env,
-    #                 network=models.mlp(num_layers=2, num_hidden=128, activation=tf.nn.relu),
-    #                 total_timesteps=0,
-    #                 load_path=dirs)
+
+    USE_CUDA = torch.cuda.is_available()
+    LOAD_CKPT = "agents/mlp_agent.pt"
+    agents, optimizer = init_agent(MLP_DQN, 0, USE_CUDA,
+                                   4, LOAD_CKPT)
 
     while True:
         obs, screen_obs = env.reset_with_render()
@@ -46,8 +44,9 @@ def main():
         steps = 0
         while not done:
             #obs, rew, done, _ , screen_obs = env.step_with_render(act(obs)[0])
-            obs, rew, done, _ , screen_obs = env.step_with_render(env.action_space.sample())
-            print(env.action_space)
+            #obs, rew, done, _ , screen_obs = env.step_with_render(env.action_space.sample())
+            action = agents["current"].act(obs.flatten(), epsilon=0.05)
+            obs, rew, done, _ , screen_obs = env.step_with_render(action)
             converted = converter(screen_obs)
             plt.ion()
             my_plot.autoscale()

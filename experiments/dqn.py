@@ -23,12 +23,13 @@ def init_weights(m):
         m.bias.data.fill_(0.01)
 
 
-def init_agent(model, L_RATE, USE_CUDA, load_checkpoint_path=None):
+def init_agent(model, L_RATE, USE_CUDA, NUM_ACTIONS=4,
+               load_checkpoint_path=None):
     """
     Out: Model (or dictionay) as well as optimizer
     """
-    agents = {"current": model(),
-              "target": model()}
+    agents = {"current": model(NUM_ACTIONS),
+              "target": model(NUM_ACTIONS)}
 
     if USE_CUDA:
         agents["current"] = agents["current"].cuda()
@@ -47,11 +48,11 @@ def init_agent(model, L_RATE, USE_CUDA, load_checkpoint_path=None):
 
 
 class MLP_DQN(nn.Module):
-    def __init__(self):
+    def __init__(self, NUM_ACTIONS=4):
         super(MLP_DQN, self).__init__()
 
         num_inputs = 10*20*6
-        self.action_space_size = 4
+        self.action_space_size = NUM_ACTIONS
 
         self.layers = nn.Sequential(
             nn.Linear(num_inputs, 128),
@@ -75,11 +76,11 @@ class MLP_DQN(nn.Module):
 
 
 class MLP_DDQN(nn.Module):
-    def __init__(self):
+    def __init__(self, NUM_ACTIONS=4):
         super(MLP_DDQN, self).__init__()
         # Implements a Dueling DQN agent based on MLP
         num_inputs = 10*20*6
-        self.action_space_size = 4
+        self.action_space_size = NUM_ACTIONS
 
         hidden_units = 128
         self.feature = nn.Sequential(

@@ -35,7 +35,9 @@ def command_line_dqn():
                         help='Max # of steps before episode terminated')
     parser.add_argument('-v', '--VERBOSE', action="store_true", default=False,
                         help='Get training progress printed out')
-
+    parser.add_argument('-print', '--PRINT_EVERY', action="store",
+                        default=100, type=int,
+                        help='#Episodes after which to print.')
 
     parser.add_argument('-gamma', '--GAMMA', action="store",
                         default=0.9, type=float,
@@ -168,17 +170,17 @@ def rollout_episode(agents, GAMMA, MAX_STEPS):
     episode_rew = 0
     steps = 0
 
-    for i in range(MAX_STEPS):
+    while steps < MAX_STEPS:
         action = agents["current"].act(obs.flatten(), epsilon=0.05)
         next_obs, reward, done, _ = env.step(action)
+        steps += 1
 
-        replay_buffer.push(0, i, obs, action,
+        replay_buffer.push(0, steps, obs, action,
                            reward, next_obs, done)
 
         obs = next_obs
 
-        episode_rew += GAMMA**i * reward
-        steps += 1
+        episode_rew += GAMMA**(steps - 1) * reward
         if done:
             break
     return steps, episode_rew, replay_buffer.buffer

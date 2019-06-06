@@ -35,15 +35,17 @@ def run_dqn_learning(args):
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
     SAVE_EVERY = args.SAVE_EVERY
     UPDATE_EVERY = args.UPDATE_EVERY
+    PRINT_EVERY = args.PRINT_EVERY
     VERBOSE = args.VERBOSE
 
+    AGENT = args.AGENT
     AGENT_FNAME = args.AGENT_FNAME
     STATS_FNAME = args.STATS_FNAME
 
     # Setup agent, replay replay_buffer, logging stats df
-    if args.AGENT == "MLP-DQN":
+    if AGENT == "MLP-DQN":
         agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA)
-    elif args.AGENT == "MLP-Dueling-DQN":
+    elif AGENT == "MLP-Dueling-DQN":
         agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA)
 
     replay_buffer = ReplayBuffer(capacity=5000)
@@ -91,15 +93,6 @@ def run_dqn_learning(args):
                 reward_stats = pd.concat([reward_stats, r_stats], axis=0)
                 step_stats = pd.concat([step_stats, s_stats], axis=0)
 
-                if VERBOSE:
-                    stop = time.time()
-                    print(log_template.format(ep_id, stop-start,
-                                              r_stats.loc[0, "rew_median"],
-                                              r_stats.loc[0, "rew_mean"],
-                                              s_stats.loc[0, "steps_median"],
-                                              s_stats.loc[0, "steps_mean"]))
-                    start = time.time()
-
             if (opt_counter+1) % UPDATE_EVERY == 0:
                 update_target(agents["current"], agents["target"])
 
@@ -111,13 +104,22 @@ def run_dqn_learning(args):
                 df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
                 df_to_save.to_csv(STATS_FNAME)
 
+        if VERBOSE and (ep_id+1) % PRINT_EVERY == 0:
+            stop = time.time()
+            print(log_template.format(ep_id+1, stop-start,
+                                      r_stats.loc[0, "rew_median"],
+                                      r_stats.loc[0, "rew_mean"],
+                                      s_stats.loc[0, "steps_median"],
+                                      s_stats.loc[0, "steps_mean"]))
+            start = time.time()
+
     # Finally save all results!
-    torch.save(agents["current"].state_dict(), AGENT_FNAME)
+    torch.save(agents["current"].state_dict(), "agents/" + AGENT_FNAME)
     # Save the logging dataframe
     df_to_save = pd.concat([reward_stats, step_stats], axis=1)
     df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
     df_to_save = df_to_save.reset_index()
-    df_to_save.to_csv("results/" + STATS_FNAME)
+    df_to_save.to_csv("results/"  + args.AGENT + "_" + STATS_FNAME)
     return df_to_save
 
 
@@ -138,7 +140,7 @@ def run_multiple_times(args, run_fct):
     df_concat = pd.concat(df_across_runs)
     by_row_index = df_concat.groupby(df_concat.index)
     df_means = by_row_index.mean()
-    df_means.to_csv(str(args.RUN_TIMES) + "_RUNS_" + args.STATS_FNAME)
+    df_means.to_csv("results/" + str(args.RUN_TIMES) + "_RUNS_" + args.AGENT + "_" + args.STATS_FNAME)
     return df_means
 
 

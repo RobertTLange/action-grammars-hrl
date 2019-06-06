@@ -113,7 +113,7 @@ Solving the $N$-disk ToH problem requires the agent to identify a hierarchical a
     \label{fig:hanoi}
  \end{figure}
  
-The gridworld environment, on the other hand, provides a non-sparse reward design. The agent has to avoid poisonous items and moving blocks as well as collect food. The solution requires to solve large set of individually smaller subtasks.
+The gridworld environment, on the other hand, provides a non-sparse reward design. The agent has to avoid poisonous items and moving blocks as well as collect food. The solution requires to solve large set of individually smaller subtasks. Furthermore, the agent has to survive for a certain time whereas the ToH environment rewarded the fastest solution to the sparse problem. 
 
 \begin{figure}[H]
     \centering
@@ -124,7 +124,6 @@ The gridworld environment, on the other hand, provides a non-sparse reward desig
  
 %-----------------------------------
 \textbf{Learning with Expert \& Transfer Grammars.} The right-hand side of figure \ref{fig:hanoi} shows the grammar and resulting macros inferred from a trace of the optimal policy 5-disk ToH problem using the 2-Sequitur. The flattened production rule $B \to CEd \to bafbcd$ captures the recursive nature learned by the grammar. $C \to baf$ moves two disks on the auxiliary pole, while $E \to bc$ moves a third disk from source to target pole and one disk back onto the source pole. The HRL agent's action space is then augmented in the following way:
-
 $$\mathcal{A}^{\hat{G}} = \mathcal{A} \cup \mathcal{M}^{2-Seq} = \mathcal{A} \cup \{bafbcd, baf, ec, bc\}$$
 
 The left-hand side of figure \ref{fig:expert_grammar_toh}\rob{Add nice figure with larger fontsize and per update - more variation} displays learning results for different SMDP-Q-Learning agents with macro-actions defined by the production rules inferred from a single trace of the optimal policy. The grammar macros accelerate the learning progress of the agent. Furthermore, the variance of rollouts is reduced due to an increased robustness related to the temporal compression of the sequential problem. 
@@ -141,12 +140,14 @@ The right-hand side, on the other hand, assesses how well the grammars learned f
 \label{fig:expert_grammar_toh}
 \end{figure}
 
+Figure \ref{fig:expert_grammar_grid}, on the other hand, shows the same exercise for a Macro-DQN agent with augmented action space.
+
 \begin{figure}[H]
-\minipage{0.49\linewidth}
-  \includegraphics[width=\linewidth]{figures/mlp_ddqn_learning_curve}
+\minipage{0.51\linewidth}
+  \includegraphics[width=\linewidth]{figures/hanoi_5_learning_curve}
 \endminipage\hfill
 \minipage{0.49\linewidth}
-  \includegraphics[width=\linewidth]{figures/mlp_ddqn_learning_curve}
+  \includegraphics[width=\linewidth]{figures/hanoi_6_learning_curve}
 \endminipage\hfill
 \caption{Expert \& Transfer Grammar Experiments (Gridworld): \textbf{Left.} Expert Grammar. \textbf{Right.} Transfer Grammar. Averaged over 5 random seed. Median, 10th and 90th percentile.}
 \label{fig:expert_grammar_grid}
@@ -156,12 +157,12 @@ The right-hand side, on the other hand, assesses how well the grammars learned f
 \textbf{Learning with Online Inferred Grammars.} Figure \ref{fig:online_grammar} displays the results of the online grammar macro inference framework for the 4 disks ToH problem as well as the gridworld task.\rob{Add figure and describe results}
 
 \begin{figure}[H]
-\minipage{0.49\linewidth}
-  \includegraphics[width=\linewidth]{figures/mlp_ddqn_learning_curve}
+\minipage{0.51\linewidth}
+  \includegraphics[width=\linewidth]{figures/hanoi_5_learning_curve}
 \endminipage\hfill
 \minipage{0.49\linewidth}
-  \includegraphics[width=\linewidth]{figures/mlp_ddqn_learning_curve}
-\endminipage
+  \includegraphics[width=\linewidth]{figures/hanoi_6_learning_curve}
+\endminipage\hfill
 \caption{Online Grammar Experiments: \textbf{Left.} 4 Disk ToH Environment. \textbf{Right.} Gridworld Grammar DQN. Averaged over 5 random seed. Median, 10th and 90th percentile.}
 \label{fig:online_grammar}
 \end{figure}
@@ -169,7 +170,9 @@ The right-hand side, on the other hand, assesses how well the grammars learned f
 
 \section{Conclusion}
 
-We have derived multiple algorithmic approaches which exploit powerful grammatical inference frameworks to identify temporally-extended actions. Our preliminary contributions are the following:
+Formal grammars do not only provide a powerful framework for studying language. Inspired by hierarchical parse trees of sequential behavior, we have derived a cognitive decision making framework which exploits grammatical inference to identify temporally-extended actions.
+
+Our preliminary contributions are the following:
 %
 (1) The CFG-based HRL agents are able to provide efficient and interpretable solutions to imitation and transfer learning tasks.
 %
