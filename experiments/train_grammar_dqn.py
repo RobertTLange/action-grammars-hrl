@@ -32,7 +32,7 @@ def run_smdp_learning(args):
     EPS_START, EPS_STOP, EPS_DECAY = args.EPS_START, args.EPS_STOP, args.EPS_DECAY
     GAMMA, L_RATE = args.GAMMA, args.L_RATE
 
-    NUM_EPISODES = args.NUM_EPISODES
+    NUM_UPDATES = args.NUM_UPDATES
     NUM_ROLLOUTS = args.NUM_ROLLOUTS
     MAX_STEPS = args.MAX_STEPS
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
@@ -52,8 +52,12 @@ def run_smdp_learning(args):
                                           AGENT, LOAD_CKPT, SEQ_DIR)
 
     NUM_ACTIONS = 4 + NUM_MACROS
-    # Setup agent, replay_buffer, macro_buffer, logging stats df
-    if AGENT == "MLP-DQN":
+    if AGENT == "DOUBLE": TRAIN_DOUBLE = True
+    else: TRAIN_DOUBLE = False
+
+    # Setup agent, replay replay_buffer, logging stats df
+    if AGENT == "MLP-DQN" or AGENT == "DOUBLE":
+        agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA)
         agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA, NUM_ACTIONS)
     elif AGENT == "MLP-Dueling-DQN":
         agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA, NUM_ACTIONS)
@@ -71,8 +75,9 @@ def run_smdp_learning(args):
     opt_counter = 0
     env = gym.make("dense-v0")
 
+    ep_id = 0
     # RUN TRAINING LOOP OVER EPISODES
-    for ep_id in range(NUM_EPISODES):
+    while opt_counter < NUM_UPDATES:
         epsilon = epsilon_by_episode(ep_id + 1, EPS_START, EPS_STOP, EPS_DECAY)
 
         obs = env.reset()
@@ -113,21 +118,13 @@ def run_smdp_learning(args):
             if done: break
             else: obs = next_obs
 
+            ep_id += 1
             # On-Policy Rollout for Performance evaluation
             if (opt_counter+1) % ROLLOUT_EVERY == 0:
                 r_stats, s_stats = get_logging_stats(opt_counter, agents,
                                                      GAMMA, NUM_ROLLOUTS, MAX_STEPS)
                 reward_stats = pd.concat([reward_stats, r_stats], axis=0)
                 step_stats = pd.concat([step_stats, s_stats], axis=0)
-
-                if VERBOSE:
-                    stop = time.time()
-                    print(log_template.format(ep_id, stop-start,
-                                              r_stats.loc[0, "rew_median"],
-                                              r_stats.loc[0, "rew_mean"],
-                                              s_stats.loc[0, "steps_median"],
-                                              s_stats.loc[0, "steps_mean"]))
-                    start = time.time()
 
             if (opt_counter+1) % UPDATE_EVERY == 0:
                 update_target(agents["current"], agents["target"])
@@ -140,6 +137,16 @@ def run_smdp_learning(args):
                 df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
                 df_to_save.to_csv("results/" + STATS_FNAME)
 
+            if VERBOSE and (opt_counter+1) % PRINT_EVERY == 0:
+                stop = time.time()
+                print(log_template.format(opt_counter+1, stop-start,
+                                          r_stats.loc[0, "rew_median"],
+                                          r_stats.loc[0, "rew_mean"],
+                                          s_stats.loc[0, "steps_median"],
+                                          s_stats.loc[0, "steps_mean"]))
+                start = time.time()
+
+        ep_id +=1
     # Finally save all results!
     torch.save(agents["current"].state_dict(),
                "agents/" + str(NUM_EPISODES) + "_" + AGENT_FNAME)

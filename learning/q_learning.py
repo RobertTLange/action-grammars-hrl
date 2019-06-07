@@ -45,7 +45,7 @@ def q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                                        "steps_median", "steps_10th_p", "steps_90th_p"])
 
     # Init Replay Buffer
-    er_buffer = ReplayBuffer(capacity=NUM_EPISODES*MAX_STEPS)
+    er_buffer = ReplayBuffer(capacity=NUM_UPDATES)
 
     update_counter = 0
     ep_id = 0

@@ -48,7 +48,7 @@ def smdp_q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                                        "steps_median", "steps_10th_p", "steps_90th_p"])
 
     # Init Replay Buffer
-    er_buffer = ReplayBuffer(NUM_EPISODES*MAX_STEPS, record_macros=True)
+    er_buffer = ReplayBuffer(NUM_UPDATES*MAX_STEPS, record_macros=True)
 
     update_counter = 0
     ep_id = 0

@@ -13,7 +13,7 @@ import torch.autograd as autograd
 def command_line_dqn():
     parser = argparse.ArgumentParser()
     parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",
-                        default=50, type=int,
+                        default=20, type=int,
                         help='Rollout test performance after # batch updates.')
     parser.add_argument('-save_upd', '--SAVE_EVERY', action="store",
                         default=2000, type=int,
@@ -21,14 +21,13 @@ def command_line_dqn():
     parser.add_argument('-update_upd', '--UPDATE_EVERY', action="store",
                         default=100, type=int,
                         help='Update target network after # batch updates')
-    parser.add_argument('-n_runs', '--RUN_TIMES', action="store",
-                        default=1, type=int,
+    parser.add_argument('-n_runs', '--RUN_TIMES', action="store",                        default=1, type=int,
                         help='# Times to run agent learning')
-    parser.add_argument('-n_eps', '--NUM_EPISODES', action="store",
-                        default=100, type=int,
+    parser.add_argument('-n_upd', '--NUM_UPDATES', action="store",
+                        default=5000, type=int,
                         help='# Epochs to train for')
     parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",
-                        default=10, type=int,
+                        default=5, type=int,
                         help='# rollouts for tracking learning progrees')
     parser.add_argument('-max_steps', '--MAX_STEPS', action="store",
                         default=1000, type=int,
@@ -36,7 +35,7 @@ def command_line_dqn():
     parser.add_argument('-v', '--VERBOSE', action="store_true", default=False,
                         help='Get training progress printed out')
     parser.add_argument('-print', '--PRINT_EVERY', action="store",
-                        default=100, type=int,
+                        default=500, type=int,
                         help='#Episodes after which to print.')
 
     parser.add_argument('-gamma', '--GAMMA', action="store",
@@ -47,6 +46,8 @@ def command_line_dqn():
     parser.add_argument('-e_start', '--EPS_START', action="store", default=1,
                         type=float, help='Start Exploration Rate')
     parser.add_argument('-e_stop', '--EPS_STOP', action="store", default=0.01,
+                        type=float, help='Start Exploration Rate')
+    parser.add_argument('-e_decay', '--EPS_DECAY', action="store", default=100,
                         type=float, help='Start Exploration Rate')
 
 
@@ -95,7 +96,7 @@ def update_target(current_model, target_model):
 
 
 def compute_td_loss(agents, optimizer, replay_buffer,
-                    TRAIN_BATCH_SIZE, GAMMA, Variable):
+                    TRAIN_BATCH_SIZE, GAMMA, Variable, TRAIN_DOUBLE):
     obs, acts, reward, next_obs, done = replay_buffer.sample(TRAIN_BATCH_SIZE)
 
     # Flatten the visual fields into vectors for MLP - not needed for CNN!
@@ -112,10 +113,16 @@ def compute_td_loss(agents, optimizer, replay_buffer,
         reward = Variable(torch.FloatTensor(reward))
 
     q_values = agents["current"](obs)
-    next_q_values = agents["target"](next_obs)
-
     q_value = q_values.gather(1, action.unsqueeze(1)).squeeze(1)
-    next_q_value = next_q_values.max(1)[0]
+
+    if TRAIN_DOUBLE:
+        next_q_values = agents["current"](next_obs)
+        next_q_state_values = agents["target"](obs)
+        next_q_value = next_q_state_values.gather(1, torch.max(next_q_values, 1)[1].unsqueeze(1)).squeeze(1)
+    else:
+        next_q_values = agents["target"](next_obs)
+        next_q_value = next_q_values.max(1)[0]
+
     expected_q_value = reward + GAMMA* next_q_value * (1 - done)
 
     loss = (q_value - expected_q_value.detach()).pow(2).mean()

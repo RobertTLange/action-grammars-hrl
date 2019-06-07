@@ -8,11 +8,14 @@ import torch
 import torch.autograd as autograd
 
 from dqn import MLP_DQN, MLP_DDQN, init_agent
-from dqn_helpers import command_line_dqn, ReplayBuffer, update_target, epsilon_by_episode, compute_td_loss, get_logging_stats
+from dqn_helpers import ReplayBuffer, update_target, epsilon_by_episode, compute_td_loss, get_logging_stats
+from smdp_helpers import MacroBuffer, macro_action_exec, command_line_grammar_dqn, get_macro_from_agent
+from train_dqn import run_multiple_times
 
+SEQ_DIR = "../grammars/sequitur/"
 
-def run_dqn_learning(args):
-    log_template = "Step {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
+def run_smdp_learning(args):
+    log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
 
     # Set the GPU device on which to run the agent
     USE_CUDA = torch.cuda.is_available()
@@ -35,23 +38,26 @@ def run_dqn_learning(args):
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
     SAVE_EVERY = args.SAVE_EVERY
     UPDATE_EVERY = args.UPDATE_EVERY
-    PRINT_EVERY = args.PRINT_EVERY
     VERBOSE = args.VERBOSE
 
     AGENT = args.AGENT
     AGENT_FNAME = args.AGENT_FNAME
     STATS_FNAME = args.STATS_FNAME
 
-    if AGENT == "DOUBLE": TRAIN_DOUBLE = True
-    else: TRAIN_DOUBLE = False
+    # Get macros from expert dqn rollout
+    LOAD_CKPT = args.LOAD_CKPT
+    NUM_MACROS = args.NUM_MACROS
+    GRAMMAR_EVERY = args.GRAMMAR_EVERY
 
-    # Setup agent, replay replay_buffer, logging stats df
-    if AGENT == "MLP-DQN" or AGENT == "DOUBLE":
-        agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA)
+    NUM_ACTIONS = 4 + NUM_MACROS
+    # Setup agent, replay_buffer, macro_buffer, logging stats df
+    if AGENT == "MLP-DQN":
+        agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA, 4)
     elif AGENT == "MLP-Dueling-DQN":
-        agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA)
+        agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA, 4)
 
     replay_buffer = ReplayBuffer(capacity=5000)
+    macro_buffer = MacroBuffer(capacity=1000)
 
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
                                          "rew_median", "rew_10th_p", "rew_90th_p"])
@@ -62,6 +68,7 @@ def run_dqn_learning(args):
     # Initialize optimization update counter and environment
     opt_counter = 0
     env = gym.make("dense-v0")
+
     ep_id = 0
     # RUN TRAINING LOOP OVER EPISODES
     while opt_counter < NUM_UPDATES:
@@ -72,19 +79,40 @@ def run_dqn_learning(args):
         steps = 0
         while steps < MAX_STEPS:
             action = agents["current"].act(obs.flatten(), epsilon)
-            next_obs, rew, done, _  = env.step(action)
-            steps += 1
 
-            # Push transition to ER Buffer
-            replay_buffer.push(ep_id, steps, obs, action,
-                               rew, next_obs, done)
+            if action < 4:
+                next_obs, rew, done, _  = env.step(action)
+                steps += 1
+
+                # Push transition to ER Buffer
+                replay_buffer.push(ep_id, steps, obs, action,
+                                   rew, next_obs, done)
+            else:
+                # Need to execute a macro action
+                macro = macros[action - 4]
+                next_obs, macro_rew, done, _ = macro_action_exec(ep_id, obs,
+                                                                 steps,
+                                                                 replay_buffer,
+                                                                 macro, env,
+                                                                 GAMMA)
+                steps += len(macro)
+                # Push macro transition to ER Buffer
+                macro_buffer.push(ep_id, steps, obs, action,
+                                  macro_rew, next_obs,
+                                  done, len(macro), macro)
+
 
             if len(replay_buffer) > TRAIN_BATCH_SIZE:
                 opt_counter += 1
                 loss = compute_td_loss(agents, optimizer, replay_buffer,
-                                       TRAIN_BATCH_SIZE, GAMMA, Variable,
-                                       TRAIN_DOUBLE)
+                                       TRAIN_BATCH_SIZE, GAMMA, Variable, TRAIN_DOUBLE)
 
+            # Check for Online Transfer
+            if (opt_counter+1) % GRAMMAR_EVERY == 0:
+                torch.save(agents["current"].state_dict(), LOAD_CKPT)
+                macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
+                                                      AGENT, LOAD_CKPT, SEQ_DIR)
+                # Reinitialize the output nodes for num_macros
 
             # Go to next episode if current one terminated or update obs
             if done: break
@@ -97,17 +125,6 @@ def run_dqn_learning(args):
                 reward_stats = pd.concat([reward_stats, r_stats], axis=0)
                 step_stats = pd.concat([step_stats, s_stats], axis=0)
 
-            if (opt_counter+1) % UPDATE_EVERY == 0:
-                update_target(agents["current"], agents["target"])
-
-            if (opt_counter+1) % SAVE_EVERY == 0:
-                # Save the model checkpoint - for single "representative agent"
-                torch.save(agents["current"].state_dict(), "agents/" + str(NUM_UPDATES) + "_" + AGENT_FNAME)
-                # Save the logging dataframe
-                df_to_save = pd.concat([reward_stats, step_stats], axis=1)
-                df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
-                df_to_save.to_csv(STATS_FNAME)
-
             if VERBOSE and (opt_counter+1) % PRINT_EVERY == 0:
                 stop = time.time()
                 print(log_template.format(opt_counter+1, stop-start,
@@ -117,43 +134,34 @@ def run_dqn_learning(args):
                                           s_stats.loc[0, "steps_mean"]))
                 start = time.time()
 
-        ep_id += 1
+            if (opt_counter+1) % UPDATE_EVERY == 0:
+                update_target(agents["current"], agents["target"])
+
+            if (opt_counter+1) % SAVE_EVERY == 0:
+                # Save the model checkpoint - for single "representative agent"
+                torch.save(agents["current"].state_dict(), "agents/" + AGENT_FNAME)
+                # Save the logging dataframe
+                df_to_save = pd.concat([reward_stats, step_stats], axis=1)
+                df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
+                df_to_save.to_csv("results/" + STATS_FNAME)
+
+        ep_id +=1
     # Finally save all results!
-    torch.save(agents["current"].state_dict(), "agents/" + str(NUM_UPDATES) + "_" + AGENT_FNAME)
+    torch.save(agents["current"].state_dict(),
+               "agents/" + AGENT_FNAME)
     # Save the logging dataframe
     df_to_save = pd.concat([reward_stats, step_stats], axis=1)
     df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
     df_to_save = df_to_save.reset_index()
-    df_to_save.to_csv("results/"  + args.AGENT + "_" + STATS_FNAME)
+    df_to_save.to_csv("results/" + STATS_FNAME)
     return df_to_save
 
 
-def run_multiple_times(args, run_fct):
-
-    df_across_runs = []
-    print("START RUNNING {} AGENT LEARNING FOR {} TIMES".format(args.AGENT,
-                                                                args.RUN_TIMES))
-    for t in range(args.RUN_TIMES):
-        start_t = time.time()
-        df_temp = run_fct(args)
-        df_across_runs.append(df_temp)
-        total_t = time.time() - start_t
-        print("Done training {}/{} runs after {:.2f} Secs".format(t+1,
-                                                                  args.RUN_TIMES,
-                                                                  total_t))
-
-    df_concat = pd.concat(df_across_runs)
-    by_row_index = df_concat.groupby(df_concat.index)
-    df_means = by_row_index.mean()
-    df_means.to_csv("results/" + str(args.RUN_TIMES) + "_RUNS_" + args.AGENT + "_" + str(args.NUM_MACROS) + "_" + args.STATS_FNAME)
-    return df_means
-
-
 if __name__ == "__main__":
-    args = command_line_dqn()
+    args = command_line_online_grammar_dqn()
 
     if args.RUN_TIMES == 1:
         print("START RUNNING {} AGENT LEARNING FOR 1 TIME".format(args.AGENT))
-        run_dqn_learning(args)
+        run_online_smdp_learning(args)
     else:
-        run_multiple_times(args, run_dqn_learning)
+        run_multiple_times(args, run_online_smdp_learning)

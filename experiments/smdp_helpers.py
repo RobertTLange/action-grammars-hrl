@@ -23,7 +23,7 @@ def command_line_grammar_dqn():
     parser.add_argument('-n_runs', '--RUN_TIMES', action="store",
                         default=1, type=int,
                         help='# Times to run agent learning')
-    parser.add_argument('-n_eps', '--NUM_EPISODES', action="store",
+    parser.add_argument('-n_upds', '--NUM_UPDATES', action="store",
                         default=100, type=int,
                         help='# Epochs to train for')
     parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",
@@ -56,7 +56,7 @@ def command_line_grammar_dqn():
     parser.add_argument('-agent', '--AGENT', action="store",
                         default="MLP-DQN", type=str, help='Agent model')
     parser.add_argument('-l_ckpt', '--LOAD_CKPT', action="store",
-                        default="agents/1000_mlp_agent.pt", type=str, help='Path from which to load expert')
+                        default="agents/3000_mlp_agent.pt", type=str, help='Path from which to load expert')
     parser.add_argument('-n_macros', '--NUM_MACROS', action="store",
                         default=2, type=int, help='Number of used macros')
 
@@ -67,7 +67,72 @@ def command_line_grammar_dqn():
                         default="expert_grammar_mlp_agent.pt", type=str,
                         help='Path to store online agents params')
     parser.add_argument('-stats_file', '--STATS_FNAME', action="store",
-                        default="expert_grammar_MLP_agent_stats.csv", type=str,
+                        default="expert_grammar_stats.csv", type=str,
+                        help='Path to store stats of MLP agent')
+    return parser.parse_args()
+
+
+def command_line_online_grammar_dqn():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",
+                        default=20, type=int,
+                        help='Rollout test performance after # batch updates.')
+    parser.add_argument('-save_upd', '--SAVE_EVERY', action="store",
+                        default=2000, type=int,
+                        help='Save network and learning stats after # batch updates')
+    parser.add_argument('-update_upd', '--UPDATE_EVERY', action="store",
+                        default=100, type=int,
+                        help='Update target network after # batch updates')
+    parser.add_argument('-n_runs', '--RUN_TIMES', action="store",
+                        default=1, type=int,
+                        help='# Times to run agent learning')
+    parser.add_argument('-n_upds', '--NUM_UPDATES', action="store",
+                        default=100, type=int,
+                        help='# Epochs to train for')
+    parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",
+                        default=5, type=int,
+                        help='# rollouts for tracking learning progrees')
+    parser.add_argument('-max_steps', '--MAX_STEPS', action="store",
+                        default=200, type=int,
+                        help='Max # of steps before episode terminated')
+    parser.add_argument('-v', '--VERBOSE', action="store_true", default=False,
+                        help='Get training progress printed out')
+    parser.add_argument('-print', '--PRINT_EVERY', action="store",
+                        default=500, type=int,
+                        help='#Episodes after which to print.')
+
+    parser.add_argument('-gamma', '--GAMMA', action="store",
+                        default=0.9, type=float,
+                        help='Discount factor')
+    parser.add_argument('-l_r', '--L_RATE', action="store", default=0.001,
+                        type=float, help='Save network and learning stats after # epochs')
+    parser.add_argument('-e_start', '--EPS_START', action="store", default=1,
+                        type=float, help='Start Exploration Rate')
+    parser.add_argument('-e_stop', '--EPS_STOP', action="store", default=0.01,
+                        type=float, help='Start Exploration Rate')
+    parser.add_argument('-e_decay', '--EPS_DECAY', action="store", default=100,
+                        type=float, help='Start Exploration Rate')
+
+
+    parser.add_argument('-train_batch', '--TRAIN_BATCH_SIZE', action="store",
+                        default=32, type=int, help='# images in training batch')
+    parser.add_argument('-agent', '--AGENT', action="store",
+                        default="MLP-DQN", type=str, help='Agent model')
+    parser.add_argument('-l_ckpt', '--LOAD_CKPT', action="store",
+                        default="agents/online_mlp_agent.pt", type=str, help='Path from which to load expert')
+    parser.add_argument('-n_macros', '--NUM_MACROS', action="store",
+                        default=2, type=int, help='Number of used macros')
+    parser.add_argument('-grammar_upd', '--GRAMMAR_EVERY', action="store",
+                        default=2, type=int, help='#Updates after which to infer new grammar')
+
+
+    parser.add_argument('-device', '--device_id', action="store",
+                        default=0, type=int, help='Device id on which to train')
+    parser.add_argument('-agent_file', '--AGENT_FNAME', action="store",
+                        default="online_grammar_mlp_agent.pt", type=str,
+                        help='Path to store online agents params')
+    parser.add_argument('-stats_file', '--STATS_FNAME', action="store",
+                        default="expert_grammar_stats.csv", type=str,
                         help='Path to store stats of MLP agent')
     return parser.parse_args()
 
