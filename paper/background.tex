@@ -237,6 +237,28 @@ E & - & bc &&  \\
   \end{minipage}
   
 Identifying this underlying hierarchical principle and generalizing between different environments requires the agent to correctly identify their state in the underlying hierarchical action parse tree.
+
+    \begin{tabular}{c | c c |} % centered columns (4 columns)
+\hline\hline %inserts double horizontal lines
+ \multicolumn{3}{c}{Trace ($\vartheta$): bafbcdbafec} \\
+ \multicolumn{3}{c}{fbafbcdbcfecdbafbcdb}\\
+\hline
+\multicolumn{3}{c}{$\Sigma = \{a,b,c,d,e,f\}$}\\
+\hline\hline
+  & \multicolumn{2}{c}{$2$-Sequitur}\\
+\hline
+ $\vartheta^{enc}$ & \multicolumn{2}{c}{BCDfBEfDdBb}\\
+ $\frac{|\vartheta^{enc}|}{|\vartheta|}$ & \multicolumn{2}{c}{0.355} \\
+ %$\frac{\mathcal{H}(\vartheta^{enc})}{\mathcal{H}(\vartheta)}$ & \multicolumn{2}{c}{1.0702} & \multicolumn{2}{c}{1.3613}\\
+\hline \hline
+$\mathbb{N}$ & $\mathcal{P}$ & $\mathcal{M}^{2-Seq}$ \\ % inserts
+\hline % inserts single horizontal line
+B & CEd & bafbcd\\
+C & - & baf\\
+D & - & ec\\
+E & - & bc\\ 
+\hline %inserts single line
+\end{tabular}
 %-----------------------------------
 \subsection{Learning with Expert Grammar and Transfer Grammar}
 
@@ -253,19 +275,19 @@ Given action sequences of an expert the HRL agent can infer a set of grammar mac
 
 $$\mathcal{A}^{\hat{G}} = \mathcal{A} \cup \mathcal{M}^{2-Seq} = \mathcal{A} \cup \{bafbcd, baf, ec, bc\}$$
 
-\begin{figure}[H]
-\minipage{0.33\textwidth}
-  \includegraphics[width=\linewidth]{figures/4_disks_transfer_grammar}
-\endminipage\hfill
-\minipage{0.33\textwidth}
-  \includegraphics[width=\linewidth]{figures/5_disks_transfer_grammar}
-\endminipage\hfill
-\minipage{0.33\textwidth}%
-  \includegraphics[width=\linewidth]{figures/6_disks_transfer_grammar}
-\endminipage
-\caption{Learning Results for SMDP-Q-Learning with Expert Grammar Macros for 4, 5 and 6 Disk Environment. Median, 10th percentile and 90th percentile reported over 5 runs.}
-\label{fig:expert_grammar}
-\end{figure}
+%\begin{figure}[H]
+%\minipage{0.33\textwidth}
+%  \includegraphics[width=\linewidth]{figures/4_disks_transfer_grammar}
+%\endminipage\hfill
+%\minipage{0.33\textwidth}
+%  \includegraphics[width=\linewidth]{figures/5_disks_transfer_grammar}
+%\endminipage\hfill
+%\minipage{0.33\textwidth}%
+%  \includegraphics[width=\linewidth]{figures/6_disks_transfer_grammar}
+%\endminipage
+%\caption{Learning Results for SMDP-Q-Learning with Expert Grammar Macros for 4, 5 and 6 Disk Environment. Median, 10th percentile and 90th percentile reported over 5 runs.}
+%\label{fig:expert_grammar}
+%\end{figure}
 
 Figure \ref{fig:expert_grammar} displays learning results for different SMDP-Q-Learning agents with macro-actions defined by the production rules inferred from a trace of the optimal policy. One can observe that the grammar macros greatly accelerate the learning progress of the agent. Furthermore, the variance of rollouts is greatly reduced due to increased robustness. Instead of using the optimal grammar macros for a specific environment, we are also interested in assessing how well the grammars learned for a more simplistic environment (i.e. $N-1$ disks).  
 

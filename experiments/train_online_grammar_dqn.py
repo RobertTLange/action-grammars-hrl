@@ -9,12 +9,12 @@ import torch.autograd as autograd
 
 from dqn import MLP_DQN, MLP_DDQN, init_agent
 from dqn_helpers import ReplayBuffer, update_target, epsilon_by_episode, compute_td_loss, get_logging_stats
-from smdp_helpers import MacroBuffer, macro_action_exec, command_line_grammar_dqn, get_macro_from_agent
+from smdp_helpers import MacroBuffer, macro_action_exec, command_line_online_grammar_dqn, get_macro_from_agent
 from train_dqn import run_multiple_times
 
 SEQ_DIR = "../grammars/sequitur/"
 
-def run_smdp_learning(args):
+def run_online_smdp_learning(args):
     log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
 
     # Set the GPU device on which to run the agent
@@ -39,6 +39,7 @@ def run_smdp_learning(args):
     SAVE_EVERY = args.SAVE_EVERY
     UPDATE_EVERY = args.UPDATE_EVERY
     VERBOSE = args.VERBOSE
+    PRINT_EVERY = args.PRINT_EVERY
 
     AGENT = args.AGENT
     AGENT_FNAME = args.AGENT_FNAME
@@ -50,11 +51,22 @@ def run_smdp_learning(args):
     GRAMMAR_EVERY = args.GRAMMAR_EVERY
 
     NUM_ACTIONS = 4 + NUM_MACROS
-    # Setup agent, replay_buffer, macro_buffer, logging stats df
-    if AGENT == "MLP-DQN":
+    if AGENT == "DOUBLE": TRAIN_DOUBLE = True
+    else: TRAIN_DOUBLE = False
+
+    # Setup agent, replay replay_buffer, logging stats df
+    if AGENT == "MLP-DQN" or AGENT == "DOUBLE":
+        agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA)
         agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA, 4)
     elif AGENT == "MLP-Dueling-DQN":
         agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA, 4)
+
+    # Get random rollout and add num-macros actions
+    torch.save(agents["current"].state_dict(), LOAD_CKPT)
+    macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
+                                          AGENT, LOAD_CKPT, SEQ_DIR)
+
+    agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA, NUM_ACTIONS)
 
     replay_buffer = ReplayBuffer(capacity=5000)
     macro_buffer = MacroBuffer(capacity=1000)
@@ -110,9 +122,8 @@ def run_smdp_learning(args):
             # Check for Online Transfer
             if (opt_counter+1) % GRAMMAR_EVERY == 0:
                 torch.save(agents["current"].state_dict(), LOAD_CKPT)
-                macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
-                                                      AGENT, LOAD_CKPT, SEQ_DIR)
-                # Reinitialize the output nodes for num_macros
+                macros, counts = get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA,
+                                                      AGENT, LOAD_CKPT, SEQ_DIR, macros)
 
             # Go to next episode if current one terminated or update obs
             if done: break
@@ -139,21 +150,20 @@ def run_smdp_learning(args):
 
             if (opt_counter+1) % SAVE_EVERY == 0:
                 # Save the model checkpoint - for single "representative agent"
-                torch.save(agents["current"].state_dict(), "agents/" + AGENT_FNAME)
+                torch.save(agents["current"].state_dict(), "agents/online_" + AGENT_FNAME)
                 # Save the logging dataframe
                 df_to_save = pd.concat([reward_stats, step_stats], axis=1)
                 df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
-                df_to_save.to_csv("results/" + STATS_FNAME)
+                df_to_save.to_csv("results/online_" + STATS_FNAME)
 
         ep_id +=1
     # Finally save all results!
-    torch.save(agents["current"].state_dict(),
-               "agents/" + AGENT_FNAME)
+    torch.save(agents["current"].state_dict(), "agents/online_" + AGENT_FNAME)
     # Save the logging dataframe
     df_to_save = pd.concat([reward_stats, step_stats], axis=1)
     df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
     df_to_save = df_to_save.reset_index()
-    df_to_save.to_csv("results/" + STATS_FNAME)
+    df_to_save.to_csv("results/online_" + STATS_FNAME)
     return df_to_save
 
 

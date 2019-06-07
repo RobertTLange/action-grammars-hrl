@@ -12,7 +12,7 @@ from cfg_grammar_dqn import get_macros
 def command_line_grammar_dqn():
     parser = argparse.ArgumentParser()
     parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",
-                        default=50, type=int,
+                        default=20, type=int,
                         help='Rollout test performance after # batch updates.')
     parser.add_argument('-save_upd', '--SAVE_EVERY', action="store",
                         default=2000, type=int,
@@ -24,10 +24,10 @@ def command_line_grammar_dqn():
                         default=1, type=int,
                         help='# Times to run agent learning')
     parser.add_argument('-n_upds', '--NUM_UPDATES', action="store",
-                        default=100, type=int,
+                        default=5000, type=int,
                         help='# Epochs to train for')
     parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",
-                        default=10, type=int,
+                        default=5, type=int,
                         help='# rollouts for tracking learning progrees')
     parser.add_argument('-max_steps', '--MAX_STEPS', action="store",
                         default=1000, type=int,
@@ -87,7 +87,7 @@ def command_line_online_grammar_dqn():
                         default=1, type=int,
                         help='# Times to run agent learning')
     parser.add_argument('-n_upds', '--NUM_UPDATES', action="store",
-                        default=100, type=int,
+                        default=5000, type=int,
                         help='# Epochs to train for')
     parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",
                         default=5, type=int,
@@ -123,7 +123,7 @@ def command_line_online_grammar_dqn():
     parser.add_argument('-n_macros', '--NUM_MACROS', action="store",
                         default=2, type=int, help='Number of used macros')
     parser.add_argument('-grammar_upd', '--GRAMMAR_EVERY', action="store",
-                        default=2, type=int, help='#Updates after which to infer new grammar')
+                        default=1000, type=int, help='#Updates after which to infer new grammar')
 
 
     parser.add_argument('-device', '--device_id', action="store",
@@ -132,7 +132,7 @@ def command_line_online_grammar_dqn():
                         default="online_grammar_mlp_agent.pt", type=str,
                         help='Path to store online agents params')
     parser.add_argument('-stats_file', '--STATS_FNAME', action="store",
-                        default="expert_grammar_stats.csv", type=str,
+                        default="online_grammar_stats.csv", type=str,
                         help='Path to store stats of MLP agent')
     return parser.parse_args()
 
@@ -184,7 +184,7 @@ def action_to_letter(action):
     return dic[action]
 
 
-def rollout_macro_episode(agents, GAMMA, MAX_STEPS):
+def rollout_macro_episode(agents, GAMMA, MAX_STEPS, macros=None):
     env = gym.make("dense-v0")
     # Rollout the policy for a single episode - greedy!
     replay_buffer = ReplayBuffer(capacity=5000)
@@ -217,15 +217,14 @@ def rollout_macro_episode(agents, GAMMA, MAX_STEPS):
 
 
 def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
-                         LOAD_CKPT, SEQ_DIR):
+                         LOAD_CKPT, SEQ_DIR, macros=None):
     # Returns list of strings corresponding to inferred macro-actions
-    macros = []
     if AGENT == "MLP-DQN":
         agents, optimizer = init_agent(MLP_DQN, 0, USE_CUDA, NUM_ACTIONS, LOAD_CKPT)
     elif AGENT == "MLP-Dueling-DQN":
         agents, optimizer = init_agent(MLP_DDQN, 0, USE_CUDA, NUM_ACTIONS, LOAD_CKPT)
 
-    steps, episode_rew, er_buffer = rollout_macro_episode(agents, 1, 200)
+    steps, episode_rew, er_buffer = rollout_macro_episode(agents, 1, 200, macros)
 
     SENTENCE = []
 

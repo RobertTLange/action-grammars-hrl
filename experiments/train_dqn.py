@@ -145,7 +145,7 @@ def run_multiple_times(args, run_fct):
     df_concat = pd.concat(df_across_runs)
     by_row_index = df_concat.groupby(df_concat.index)
     df_means = by_row_index.mean()
-    df_means.to_csv("results/" + str(args.RUN_TIMES) + "_RUNS_" + args.AGENT + "_" + str(args.NUM_MACROS) + "_" + args.STATS_FNAME)
+    df_means.to_csv("results/" + str(args.RUN_TIMES) + "_RUNS_" + args.AGENT + "_" + args.STATS_FNAME)
     return df_means
 
 

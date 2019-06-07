@@ -63,8 +63,6 @@ def run_smdp_learning(args):
         agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA, NUM_ACTIONS)
 
     replay_buffer = ReplayBuffer(capacity=5000)
-    macro_buffer = MacroBuffer(capacity=1000)
-
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
                                          "rew_median", "rew_10th_p", "rew_90th_p"])
 
@@ -102,16 +100,11 @@ def run_smdp_learning(args):
                                                                  macro, env,
                                                                  GAMMA)
                 steps += len(macro)
-                # Push macro transition to ER Buffer
-                macro_buffer.push(ep_id, steps, obs, action,
-                                  macro_rew, next_obs,
-                                  done, len(macro), macro)
-
 
             if len(replay_buffer) > TRAIN_BATCH_SIZE:
                 opt_counter += 1
                 loss = compute_td_loss(agents, optimizer, replay_buffer,
-                                       TRAIN_BATCH_SIZE, GAMMA, Variable)
+                                       TRAIN_BATCH_SIZE, GAMMA, Variable, TRAIN_DOUBLE)
 
 
             # Go to next episode if current one terminated or update obs
@@ -131,7 +124,7 @@ def run_smdp_learning(args):
 
             if (opt_counter+1) % SAVE_EVERY == 0:
                 # Save the model checkpoint - for single "representative agent"
-                torch.save(agents["current"].state_dict(), "agents/" + str(NUM_EPISODES) + "_" + AGENT_FNAME)
+                torch.save(agents["current"].state_dict(), "agents/" + AGENT + "_" + AGENT_FNAME)
                 # Save the logging dataframe
                 df_to_save = pd.concat([reward_stats, step_stats], axis=1)
                 df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
@@ -149,12 +142,12 @@ def run_smdp_learning(args):
         ep_id +=1
     # Finally save all results!
     torch.save(agents["current"].state_dict(),
-               "agents/" + str(NUM_EPISODES) + "_" + AGENT_FNAME)
+               "agents/" + AGENT + "_" + AGENT_FNAME)
     # Save the logging dataframe
     df_to_save = pd.concat([reward_stats, step_stats], axis=1)
     df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
     df_to_save = df_to_save.reset_index()
-    df_to_save.to_csv("results/" + STATS_FNAME)
+    df_to_save.to_csv("results/" + str(NUM_MACROS) + "_" + STATS_FNAME)
     return df_to_save
 
 
