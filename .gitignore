@@ -4,3 +4,8 @@
 __pycache__
 .texpadtmp
 .sync-config.cson
+figures/
+paper/
+results/
+sequitur/
+Lexis/

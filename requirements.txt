@@ -5,3 +5,4 @@ pandas==0.24.2
 pycolab==1.2
 scipy==1.2.1
 seaborn==0.9.0
+torch==1.1.0

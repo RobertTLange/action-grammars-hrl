@@ -1,7 +1,9 @@
 # Action Grammars: A Grammar-Induction Based Method for Learning Temporally-Extended Actions
-## Authors: Robert Lange and Aldo Faisal | January 2019
+## Authors: Robert Lange & Aldo Faisal | July 2019
 
-Implementation of ICML 2019 submitted paper.
+Implementation of CCN 2019 accepted paper. For the full paper click here. In this work we combine Hierarchical Reinforcement Learning and Grammar induction algorithms in order to define temporal abstractions. These can then be used to alter the action space of the Reinforcement Learning agent.
+
+This work originated during a MSc project at the FaisalLab at Imperial College London.
 
 ## Repository Structure
 ```
@@ -18,40 +20,33 @@ virtualenv -p python AG
 source AG/bin/activate
 pip install -r requirements.txt
 ```
-2. Install all remaining dependencies (Hanoi Env, Sequitur, Lexis):
+2. Install all remaining dependencies (Hanoi Env, Sequitur):
 ```
 source setup.bash
 ```
-3. Run the main notebook:
+3. Run the experiments:
 ```
-jupyter notebook workspace.ipynb
+bash run_experiments.sh $toh
+bash run_experiments.sh $gridworld
 ```
-
-## (Advanced) Jupyter Env Setup and Setup on AWS Virtual Machine Instance
-
-* Create the environment, activate it and install dependencies
+4. Visualize the results:
 ```
-conda create --name AG python=3.6 --no-default-packages
-source activate AG
-pip install -r requirements.txt --quiet
-```
-Add ipykernel to listed env kernels, Launch notebook silent and open port
-```
-python -m ipykernel install --user --name AG --display-name "Python3 (AG)"
-jupyter notebook --no-browser --port=8080
-```
-In new terminal window on local machine rewire port and listen
-```
-ssh -N -f -L localhost:2411:localhost:8080 MACHINE_IP_ADDRESS
-```
-In Browser open localhost port and start working on the notebook of choice.
-If required copy paste the token/set a password.
-```
-localhost:2411
+jupyter notebook visualize_results.ipynb
 ```
 
-## Jupyter Env Cleanup
-```
-conda env remove -n AG
-jupyter kernelspec uninstall AG
-```
+## Get in touch!
+
+There are many possible avenues that I want to explore in the following months. Feel free to contact me in case of any questions!
+
+August 2019,
+
+Robert Tjarko Lange
+
+## ToDo-List
+* [ ] Parallelize over runs
+* [ ] Compress learning functions - functional/object oriented programming
+* [ ] Add random seed & run experiments over longer time again!
+* [ ] Actually look into the grammars
+* [ ] Fix online towers grammar inference
+* [ ] Get Lexis rolling
+* [ ] Better documentation - Comment code and provide better repo structure
