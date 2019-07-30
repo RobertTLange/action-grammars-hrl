@@ -16,7 +16,7 @@ def command_line_towers():
                         default=100, type=int,
                         help='Rollout test performance after # batch updates.')
     parser.add_argument('-print', '--PRINT_EVERY', action="store",
-                        default=100, type=int,
+                        default=10000, type=int,
                         help='#Episodes after which to print.')
     parser.add_argument('-n_runs', '--RUN_TIMES', action="store",
                         default=1, type=int,
@@ -80,10 +80,10 @@ def learning_params(l_type, NUM_DISKS=4):
         params["NUM_UPDATES"] = 11000
         params["MAX_STEPS"] = 500
     elif NUM_DISKS == 5:
-        params["NUM_UPDATES"] = 17000
+        params["NUM_UPDATES"] = 300000
         params["MAX_STEPS"] = 2000
     elif NUM_DISKS == 6:
-        params["NUM_UPDATES"] = 600000
+        params["NUM_UPDATES"] = 10000000
         params["MAX_STEPS"] = 5000
     return params
 
