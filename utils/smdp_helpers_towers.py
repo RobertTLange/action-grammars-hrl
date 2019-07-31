@@ -1,12 +1,17 @@
+import time
 import math
 import numpy as np
+import pandas as pd
+
+import gym
+import gym_hanoi
 
 from utils.q_helpers_towers import  q_learning
-
 from grammars.cfg_grammar import get_macros
-
 from agents.q_agent import QTable, Agent_Q
-from utils.general_towers import discounted_return, macro_step, get_macros_from_productions, learning_params
+from utils.general_towers import discounted_return, get_logging_stats
+from utils.general_towers import learning_params, ReplayBuffer
+from utils.general_towers import macro_step, get_macros_from_productions
 
 
 def smdp_q_learning_update(GAMMA, ALPHA, LAMBDA, q_func, eligibility,
@@ -64,6 +69,8 @@ def smdp_q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
         old_action = None
         old_state = None
 
+        ep_id += 1
+
         for i in range(MAX_STEPS):
             action = agent.epsilon_greedy_action(state, EPSILON)
             if action > 5:
@@ -103,19 +110,18 @@ def smdp_q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                 reward_stats = pd.concat([reward_stats, r_stats], axis=0)
                 step_stats = pd.concat([step_stats, s_stats], axis=0)
 
-        ep_id += 1
-        if VERBOSE and ep_id % PRINT_EVERY == 0:
-            stop = time.time()
-            print(log_template.format(ep_id, stop-start,
-                                      r_stats.loc[0, "rew_median"],
-                                      r_stats.loc[0, "rew_mean"],
-                                      s_stats.loc[0, "steps_median"],
-                                      s_stats.loc[0, "steps_mean"]))
-            start = time.time()
+            if VERBOSE and update_counter % PRINT_EVERY == 0:
+                stop = time.time()
+                print(log_template.format(update_counter, stop-start,
+                                          r_stats.loc[0, "rew_median"],
+                                          r_stats.loc[0, "rew_mean"],
+                                          s_stats.loc[0, "steps_median"],
+                                          s_stats.loc[0, "steps_mean"]))
+                start = time.time()
 
     # Save the logging dataframe
     df_to_save = pd.concat([reward_stats, step_stats], axis=1)
-    df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
+    df_to_save = df_to_save.loc[:, ~df_to_save.columns.duplicated()]
     df_to_save = df_to_save.reset_index()
     df_to_save.to_csv("results/TOH/" + STATS_FNAME)
     return df_to_save

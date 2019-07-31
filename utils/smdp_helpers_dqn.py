@@ -15,15 +15,8 @@ def command_line_grammar_dqn(dqn_parser):
                         default="agents/3000_mlp_agent.pt", type=str, help='Path from which to load expert')
     parser.add_argument('-n_macros', '--NUM_MACROS', action="store",
                         default=2, type=int, help='Number of used macros')
-    parser.add_argument('-n_macros', '--NUM_MACROS', action="store",
-                        default=2, type=int, help='Number of used macros')
     parser.add_argument('-run_expert', '--RUN_EXPERT_GRAMMAR', action='store_true',
                         default=False)
-    return parser.parse_args()
-
-
-def command_line_online_grammar_dqn(grammar_parser):
-    parser = argparse.ArgumentParser(parents=[grammar_parser])
     parser.add_argument('-grammar_upd', '--GRAMMAR_EVERY', action="store",
                         default=1000, type=int, help='#Updates after which to infer new grammar')
     parser.add_argument('-run_online', '--RUN_ONLINE_GRAMMAR', action='store_true',

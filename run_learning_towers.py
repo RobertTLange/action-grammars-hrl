@@ -12,8 +12,6 @@ from utils.q_helpers_towers import q_learning
 from utils.smdp_helpers_towers import smdp_q_learning, smdp_q_online_learning
 from utils.general_towers import get_optimal_macros, command_line_towers, DotDic, learning_params
 
-np.random.seed(0)
-
 
 def run_learning(args):
     LEARN_TYPE = args.LEARN_TYPE
@@ -53,8 +51,10 @@ def run_learning(args):
         agent = SMDP_Agent_Q(env, macros)
 
 
-    print("START RUNNING AGENT LEARNING FOR {} TIMES".format(args.RUN_TIMES))
+    print("START RUNNING {} AGENT LEARNING FOR {} TIMES".format(LEARN_TYPE,
+                                                                args.RUN_TIMES))
     for t in range(RUN_TIMES):
+        np.random.seed(t)
         start_t = time.time()
         # Reset values to 0 initialization without having to recompute mov_map
         agent.reset_values()
@@ -65,6 +65,7 @@ def run_learning(args):
                                  PRINT_EVERY, VERBOSE)
 
         elif LEARN_TYPE == "Imitation-SMDP-Q-Learning" or LEARN_TYPE == "Transfer-SMDP-Q-Learning":
+            print(VERBOSE, NUM_UPDATES, MAX_STEPS, ROLLOUT_EVERY, PRINT_EVERY)
             df_temp = smdp_q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                                       GAMMA, ALPHA, LAMBDA, EPSILON,
                                       ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME,

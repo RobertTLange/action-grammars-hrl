@@ -11,7 +11,7 @@ from agents.dqn import MLP_DQN, MLP_DDQN, init_agent
 from utils.general_dqn import command_line_dqn, ReplayBuffer, update_target, epsilon_by_episode
 from utils.general_dqn import compute_td_loss, get_logging_stats, run_multiple_times
 from utils.smdp_helpers_dqn import MacroBuffer, macro_action_exec, get_macro_from_agent
-from utils.smdp_helpers_dqn import command_line_grammar_dqn,  command_line_online_grammar_dqn
+from utils.smdp_helpers_dqn import command_line_grammar_dqn
 
 SEQ_DIR = "../grammars/sequitur/"
 
@@ -37,14 +37,13 @@ def run_dqn_learning(args):
     NUM_ROLLOUTS = args.NUM_ROLLOUTS
     MAX_STEPS = args.MAX_STEPS
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
-    SAVE_EVERY = args.SAVE_EVERY
     UPDATE_EVERY = args.UPDATE_EVERY
     VERBOSE = args.VERBOSE
     PRINT_EVERY = args.PRINT_EVERY
 
     AGENT = args.AGENT
     AGENT_FNAME = args.AGENT_FNAME
-    STATS_FNAME = args.STATS_FNAME
+    STATS_FNAME = args.SAVE_FNAME
 
     if AGENT == "DOUBLE": TRAIN_DOUBLE = True
     else: TRAIN_DOUBLE = False
@@ -104,14 +103,6 @@ def run_dqn_learning(args):
             if (opt_counter+1) % UPDATE_EVERY == 0:
                 update_target(agents["current"], agents["target"])
 
-            if (opt_counter+1) % SAVE_EVERY == 0:
-                # Save the model checkpoint - for single "representative agent"
-                torch.save(agents["current"].state_dict(), "agents/" + str(NUM_UPDATES) + "_" + AGENT_FNAME)
-                # Save the logging dataframe
-                df_to_save = pd.concat([reward_stats, step_stats], axis=1)
-                df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
-                df_to_save.to_csv(STATS_FNAME)
-
             if VERBOSE and (opt_counter+1) % PRINT_EVERY == 0:
                 stop = time.time()
                 print(log_template.format(opt_counter+1, stop-start,
@@ -154,13 +145,12 @@ def run_smdp_dqn_learning(args):
     NUM_ROLLOUTS = args.NUM_ROLLOUTS
     MAX_STEPS = args.MAX_STEPS
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
-    SAVE_EVERY = args.SAVE_EVERY
     UPDATE_EVERY = args.UPDATE_EVERY
     VERBOSE = args.VERBOSE
 
     AGENT = args.AGENT
     AGENT_FNAME = args.AGENT_FNAME
-    STATS_FNAME = args.STATS_FNAME
+    STATS_FNAME = args.SAVE_FNAME
 
     # Get macros from expert dqn rollout
     LOAD_CKPT = args.LOAD_CKPT
@@ -240,14 +230,6 @@ def run_smdp_dqn_learning(args):
             if (opt_counter+1) % UPDATE_EVERY == 0:
                 update_target(agents["current"], agents["target"])
 
-            if (opt_counter+1) % SAVE_EVERY == 0:
-                # Save the model checkpoint - for single "representative agent"
-                torch.save(agents["current"].state_dict(), "agents/" + AGENT + "_" + AGENT_FNAME)
-                # Save the logging dataframe
-                df_to_save = pd.concat([reward_stats, step_stats], axis=1)
-                df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
-                df_to_save.to_csv("results/" + STATS_FNAME)
-
             if VERBOSE and (opt_counter+1) % PRINT_EVERY == 0:
                 stop = time.time()
                 print(log_template.format(opt_counter+1, stop-start,
@@ -291,14 +273,13 @@ def run_online_dqn_smdp_learning(args):
     NUM_ROLLOUTS = args.NUM_ROLLOUTS
     MAX_STEPS = args.MAX_STEPS
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
-    SAVE_EVERY = args.SAVE_EVERY
     UPDATE_EVERY = args.UPDATE_EVERY
     VERBOSE = args.VERBOSE
     PRINT_EVERY = args.PRINT_EVERY
 
     AGENT = args.AGENT
     AGENT_FNAME = args.AGENT_FNAME
-    STATS_FNAME = args.STATS_FNAME
+    STATS_FNAME = args.SAVE_FNAME
 
     # Get macros from expert dqn rollout
     LOAD_CKPT = args.LOAD_CKPT
@@ -402,14 +383,6 @@ def run_online_dqn_smdp_learning(args):
             if (opt_counter+1) % UPDATE_EVERY == 0:
                 update_target(agents["current"], agents["target"])
 
-            if (opt_counter+1) % SAVE_EVERY == 0:
-                # Save the model checkpoint - for single "representative agent"
-                torch.save(agents["current"].state_dict(), "agents/online_" + AGENT_FNAME)
-                # Save the logging dataframe
-                df_to_save = pd.concat([reward_stats, step_stats], axis=1)
-                df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
-                df_to_save.to_csv("results/online_" + STATS_FNAME)
-
         ep_id +=1
     # Finally save all results!
     torch.save(agents["current"].state_dict(), "agents/online_" + AGENT_FNAME)
@@ -422,22 +395,21 @@ def run_online_dqn_smdp_learning(args):
 
 
 if __name__ == "__main__":
-    dqn_args = command_line_dqn()
-    grammar_dqn_args = command_line_grammar_dqn(dqn_args)
-    all_args = command_line_online_grammar_dqn(dqn_args)
+    dqn_args = command_line_dqn(parent=True)
+    all_args = command_line_grammar_dqn(dqn_args)
 
     if all_args.RUN_TIMES == 1:
-        print("START RUNNING {} AGENT LEARNING FOR 1 TIME".format(args.AGENT))
+        print("START RUNNING {} AGENT LEARNING FOR 1 TIME".format(all_args.AGENT))
         if all_args.RUN_EXPERT_GRAMMAR:
-            run_smdp_dqn_learning(args)
+            run_smdp_dqn_learning(all_args)
         elif all_args.RUN_ONLINE_GRAMMAR:
-            run_online_smdp_learning(args)
+            run_online_smdp_learning(all_args)
         else:
-            run_dqn_learning(args)
+            run_dqn_learning(all_args)
     else:
         if all_args.RUN_EXPERT_GRAMMAR:
-            run_multiple_times(args, run_smdp_dqn_learning)
+            run_multiple_times(all_args, run_smdp_dqn_learning)
         elif all_args.RUN_ONLINE_GRAMMAR:
-            run_multiple_times(args, run_online_dqn_smdp_learning)
+            run_multiple_times(all_args, run_online_dqn_smdp_learning)
         else:
-            run_multiple_times(args, run_dqn_learning)
+            run_multiple_times(all_args, run_dqn_learning)
