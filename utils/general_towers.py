@@ -39,7 +39,7 @@ def command_line_towers():
     parser.add_argument('-t_dist', '--TRANSFER_DISTANCE', action="store",
                         default=1, type=int,
                         help='# Disks Distance in optimal Grammar')
-    parser.add_argument('-stats_file', '--STATS_FNAME', action="store",
+    parser.add_argument('-save_fname', '--SAVE_FNAME', action="store",
                         default="TOH.csv", type=str,
                         help='Path to store stats of MLP agent')
     return parser.parse_args()

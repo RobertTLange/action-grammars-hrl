@@ -1,14 +1,34 @@
 # Action Grammars: A Grammar-Induction Based Method for Learning Temporally-Extended Actions
 ## Authors: Robert Lange & Aldo Faisal | July 2019
 
-Implementation of CCN 2019 accepted paper. For the full paper click here. In this work we combine Hierarchical Reinforcement Learning and Grammar induction algorithms in order to define temporal abstractions. These can then be used to alter the action space of the Reinforcement Learning agent.
+Implementation of [CCN 2019 accepted paper](https://arxiv.org/abs/1907.12477). For the full paper click here. In this work we combine Hierarchical Reinforcement Learning and Grammar induction algorithms in order to define temporal abstractions. These can then be used to alter the action space of the Reinforcement Learning agent.
 
 This work originated during a MSc project at the FaisalLab at Imperial College London.
+
+<p float="left">
+  <img src="docs/hanoi_5_learning_curve.png" width="300" />
+  <img src="docs/hanoi_6_learning_curve.png" width="300" />
+  <img src="docs/grammar_dqn_gridworld_expert.png" width="300" />
+  <img src="docs/grammar_dqn_gridworld_online.png" width="300" />
+
+</p>
+
 
 ## Repository Structure
 ```
 Action Grammars
-+- workspace.ipynb: Main workspace notebook - Execute for replication
++- agents: Folder containing implemented agents
++- docs: Paper and illustrative figures
++- grammars: Folder containing grammar utilities
++- utils: Folder containing supporting functions
++- Readme.md: Documentation
++- requirements.txt: Required dependencies
++- run_experiments_grid.sh: Executes gridworld experiments
++- run_experiments_towers.sh: Executes Towers of Hanoi experiments
++- run_learning_grid.py: Learning loop gridworld
++- run_learning_towers.py: Learning loop Towers of Hanoi
++- setup.bash: Setup script installing things
++- visualize_results.ipynb: Visualization of experimental results
 ```
 
 ## (Basic) How to use this code
@@ -19,8 +39,9 @@ cd action-grammars-hrl
 virtualenv -p python AG
 source AG/bin/activate
 pip install -r requirements.txt
+mkdir results
 ```
-2. Install all remaining dependencies (Hanoi Env, Sequitur):
+2. Install remaining dependencies (Hanoi Env, Sequitur):
 ```
 source setup.bash
 ```

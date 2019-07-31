@@ -240,6 +240,5 @@ def run_multiple_times(args, run_fct):
     df_concat = pd.concat(df_across_runs)
     by_row_index = df_concat.groupby(df_concat.index)
     df_means, df_stds = by_row_index.mean(), by_row_index.std()
-    if args.SAVE:
-        df_means.to_csv("logs/" + args.SAVE_FNAME + ".csv")
+    df_means.to_csv("results/GRIDWORLD/" + str(args.RUN_TIMES) + "_RUNS_" + str(args.AGENT) + "_" + args.SAVE_FNAME)
     return df_means, df_stds

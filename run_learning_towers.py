@@ -24,7 +24,7 @@ def run_learning(args):
     VERBOSE = args.VERBOSE
 
     RUN_TIMES = args.RUN_TIMES
-    STATS_FNAME = args.STATS_FNAME
+    STATS_FNAME = args.SAVE_FNAME
 
     params = DotDic(learning_params(LEARN_TYPE, N_DISKS))
     ALPHA = params.ALPHA
@@ -90,9 +90,9 @@ def run_learning(args):
     df_means = by_row_index.mean()
 
     if LEARN_TYPE == "Transfer-SMDP-Q-Learning":
-        df_means.to_csv("results/" + str(args.RUN_TIMES) + "_RUNS_" + str(args.N_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + str(TRANSFER_DISTANCE)+ "_"+ args.STATS_FNAME)
+        df_means.to_csv("results/TOH/" + str(args.RUN_TIMES) + "_RUNS_" + str(args.N_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + str(TRANSFER_DISTANCE)+ "_"+ args.SAVE_FNAME)
     else:
-        df_means.to_csv("results/" + str(args.RUN_TIMES) + "_RUNS_" + str(args.N_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + args.STATS_FNAME)
+        df_means.to_csv("results/TOH/" + str(args.RUN_TIMES) + "_RUNS_" + str(args.N_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + args.SAVE_FNAME)
 
     return df_means
 
