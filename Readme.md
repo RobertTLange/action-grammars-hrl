@@ -5,12 +5,11 @@ Implementation of [CCN 2019 accepted paper](https://arxiv.org/abs/1907.12477). F
 
 This work originated during a MSc project at the FaisalLab at Imperial College London.
 
-<p float="left">
-  <img src="docs/hanoi_5_learning_curve.png" width="300" />
-  <img src="docs/hanoi_6_learning_curve.png" width="300" />
-  <img src="docs/grammar_dqn_gridworld_expert.png" width="300" />
-  <img src="docs/grammar_dqn_gridworld_online.png" width="300" />
-
+<p float="center">
+  <img src="docs/hanoi_5_learning_curve.png" width="400" />
+  <img src="docs/hanoi_6_learning_curve.png" width="400" />
+  <img src="docs/grammar_dqn_gridworld_expert.png" width="400" />
+  <img src="docs/grammar_dqn_gridworld_online.png" width="400" />
 </p>
 
 
@@ -43,12 +42,12 @@ mkdir results
 ```
 2. Install remaining dependencies (Hanoi Env, Sequitur):
 ```
-source setup.bash
+bash run_experiments.sh setup
 ```
 3. Run the experiments:
 ```
-bash run_experiments.sh $toh
-bash run_experiments.sh $gridworld
+bash run_experiments.sh towers-of-hanoi
+bash run_experiments.sh gridworld
 ```
 4. Visualize the results:
 ```
@@ -66,8 +65,9 @@ Robert Tjarko Lange
 ## ToDo-List
 * [ ] Parallelize over runs
 * [ ] Compress learning functions - functional/object oriented programming
-* [ ] Add random seed & run experiments over longer time again!
-* [ ] Actually look into the grammars
+* [ ] Add random seed for reproducibility
+* [ ] Run experiments over longer time again!
+* [ ] Actually look into the grammars - how often used over course of time
 * [ ] Fix online towers grammar inference
-* [ ] Get Lexis rolling
+* [ ] Get grammar inference algorithms working (remote)! + Get Lexis running
 * [ ] Better documentation - Comment code and provide better repo structure
