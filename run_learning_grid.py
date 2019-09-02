@@ -65,10 +65,9 @@ def run_dqn_learning(args):
     # Initialize optimization update counter and environment
     opt_counter = 0
     env = gym.make("dense-v0")
-    ep_id = 0
     # RUN TRAINING LOOP OVER EPISODES
     while opt_counter < NUM_UPDATES:
-        epsilon = epsilon_by_episode(ep_id + 1, EPS_START, EPS_STOP, EPS_DECAY)
+        epsilon = epsilon_by_episode(opt_counter + 1, EPS_START, EPS_STOP, EPS_DECAY)
 
         obs = env.reset()
 
@@ -89,10 +88,6 @@ def run_dqn_learning(args):
                                        TRAIN_DOUBLE)
 
 
-            # Go to next episode if current one terminated or update obs
-            if done: break
-            else: obs = next_obs
-
             # On-Policy Rollout for Performance evaluation
             if (opt_counter+1) % ROLLOUT_EVERY == 0:
                 r_stats, s_stats = get_logging_stats(opt_counter, agents,
@@ -112,7 +107,10 @@ def run_dqn_learning(args):
                                           s_stats.loc[0, "steps_mean"]))
                 start = time.time()
 
-        ep_id += 1
+            # Go to next episode if current one terminated or update obs
+            if done: break
+            else: obs = next_obs
+
     if args.SAVE:
         # Finally save all results!
         torch.save(agents["current"].state_dict(), "agents/" + str(NUM_UPDATES) + "_" + AGENT_FNAME)

@@ -49,4 +49,13 @@ then
     # EXPERT GRAMMAR SIMULATIONS
     python run_learning_grid.py --RUN_TIMES 5 --SAVE_FNAME base_stats.csv
     # ONLINE GRAMMAR SIMULATIONS
+elif [[ "$*" == "atari" ]]
+then
+    ################################################################################
+    # RUN GRIDWORLD DQN EXPERIMENTS
+    ################################################################################
+    echo "Run ATARI Grammar-DQN Experiments"
+    mkdir -p results/ATARI
+    # BASELINE SIMULATIONS
+    python run_learning_atari.py --RUN_TIMES 3 --SAVE_FNAME base_stats.csv
 fi

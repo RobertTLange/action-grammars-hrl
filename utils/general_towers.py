@@ -30,7 +30,6 @@ def command_line_towers():
     parser.add_argument('-v', '--VERBOSE', action="store_true", default=False,
                         help='Get training progress printed out')
 
-
     parser.add_argument('-n_disks', '--N_DISKS', action="store",
                         default=4, type=int,
                         help='# Disks Hanoi Environment')
