@@ -51,20 +51,24 @@ then
 ################################################################################
 # RUN GRIDWORLD DQN EXPERIMENTS
 ################################################################################
+elif [[ "$*" == "grid-experts" ]]
+then
+    echo "Train Grid Experts 250k, 500k, 1M"
+    python run_learning_grid.py --RUN_TIMES 1 --SAVE --VERBOSE
 elif [[ "$*" == "grid-fig7-left" ]]
 then
     echo "Run Grid Expert Grammar-DQN Experiments (fig 7 left)"
-    # BASELINE SIMULATIONS (DQN + Dueling DQN)
-    python run_learning_grid.py --RUN_TIMES 5 --SAVE_FNAME base_stats.csv
+    # BASELINE SIMULATION (DQN + Dueling DQN)
+    python run_learning_grid.py --RUN_TIMES 5 --SAVE_FNAME dqn_stats.csv
     python run_learning_grid.py --AGENT MLP-Dueling-DQN --RUN_TIMES 5 --SAVE_FNAME dueling_stats.csv
     # EXPERT GRAMMAR SIMULATIONS (DQN AGENT AFTER 1 MIO ITS)
-    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/1M_mlp_agent --SAVE_FNAME grid_expert_1M.csv
+    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/1000000_mlp_agent.pt --SAVE_FNAME grid_expert_1M.csv
 elif [[ "$*" == "grid-fig7-middle" ]]
 then
     echo "Run Grid Transfer Grammar-DQN Experiments (fig 7 middle)"
     # TRANSFER GRAMMAR SIMULATIONS (DQN AGENT AFTER 250/500K ITS)
-    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/250k_mlp_agent --SAVE_FNAME grid_transfer_250k.csv
-    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/500k_mlp_agent --SAVE_FNAME grid_transfer_500k.csv
+    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/250000_mlp_agent.pt --SAVE_FNAME grid_transfer_250k.csv
+    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/500000_mlp_agent.pt --SAVE_FNAME grid_transfer_500k.csv
 elif [[ "$*" == "gridworld-online" ]]
 then
     echo "Run Gridworld Online Grammar-DQN Experiments (fig 8 r1 right)"

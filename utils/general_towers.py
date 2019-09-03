@@ -84,7 +84,7 @@ def learning_params(l_type, NUM_DISKS=4):
         params["NUM_UPDATES"] = 300000
         params["MAX_STEPS"] = 2000
     elif NUM_DISKS == 6:
-        params["NUM_UPDATES"] = 10000000
+        params["NUM_UPDATES"] = 7000000
         params["MAX_STEPS"] = 5000
     return params
 

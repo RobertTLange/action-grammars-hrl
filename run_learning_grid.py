@@ -69,7 +69,7 @@ def run_dqn_learning(args):
         epsilon = epsilon_by_episode(opt_counter + 1, EPS_START, EPS_STOP, EPS_DECAY)
 
         obs = env.reset()
-
+        ep_id = 0
         steps = 0
         while steps < MAX_STEPS:
             action = agents["current"].act(obs.flatten(), epsilon)
@@ -106,10 +106,16 @@ def run_dqn_learning(args):
                                           s_stats.loc[0, "steps_mean"]))
                 start = time.time()
 
+            if args.SAVE:
+                if opt_counter+1 in [10, 250000, 500000, 1000000]:
+                    agent_path = "agents/trained/" + str(opt_counter+1) + "_" + AGENT_FNAME
+                    torch.save(agents["current"].state_dict(), agent_path)
+                    print("Saved expert agent to {}".format(agent_path))
+
             # Go to next episode if current one terminated or update obs
             if done: break
             else: obs = next_obs
-
+        ep_id += 1
     if args.SAVE:
         # Finally save all results!
         torch.save(agents["current"].state_dict(), "agents/" + str(NUM_UPDATES) + "_" + AGENT_FNAME)
@@ -161,7 +167,6 @@ def run_smdp_dqn_learning(args):
 
     # Setup agent, replay replay_buffer, logging stats df
     if AGENT == "MLP-DQN" or AGENT == "DOUBLE":
-        agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA)
         agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA, NUM_ACTIONS)
     elif AGENT == "MLP-Dueling-DQN":
         agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA, NUM_ACTIONS)
@@ -210,11 +215,6 @@ def run_smdp_dqn_learning(args):
                 loss = compute_td_loss(agents, optimizer, replay_buffer,
                                        TRAIN_BATCH_SIZE, GAMMA, Variable, TRAIN_DOUBLE)
 
-
-            # Go to next episode if current one terminated or update obs
-            if done: break
-            else: obs = next_obs
-
             ep_id += 1
             # On-Policy Rollout for Performance evaluation
             if (opt_counter+1) % ROLLOUT_EVERY == 0:
@@ -234,6 +234,9 @@ def run_smdp_dqn_learning(args):
                                           s_stats.loc[0, "steps_median"],
                                           s_stats.loc[0, "steps_mean"]))
                 start = time.time()
+            # Go to next episode if current one terminated or update obs
+            if done: break
+            else: obs = next_obs
 
         ep_id +=1
     if args.SAVE:

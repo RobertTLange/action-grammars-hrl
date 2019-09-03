@@ -15,7 +15,7 @@ def command_line_dqn(parent=False):
     parser = argparse.ArgumentParser(add_help=False)
     # General logging/saving and device arguments
     parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",
-                        default=20, type=int,
+                        default=1000, type=int,
                         help='Rollout test performance after # batch updates.')
     parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",
                         default=5, type=int,
@@ -24,7 +24,7 @@ def command_line_dqn(parent=False):
                         default=5, type=int,
                         help='# Times to run agent learning')
     parser.add_argument('-n_upd', '--NUM_UPDATES', action="store",
-                        default=8000, type=int,
+                        default=1000000, type=int,
                         help='# SGD updates/iterations to train for')
     parser.add_argument('-max_steps', '--MAX_STEPS', action="store",
                         default=200, type=int,
@@ -32,7 +32,7 @@ def command_line_dqn(parent=False):
     parser.add_argument('-v', '--VERBOSE', action="store_true", default=False,
                         help='Get training progress printed out')
     parser.add_argument('-print', '--PRINT_EVERY', action="store",
-                        default=500, type=int,
+                        default=50000, type=int,
                         help='#Episodes after which to print if verbose.')
     parser.add_argument('-s', '--SAVE', action="store_true",
                         default=False, help='Save final agents and log')

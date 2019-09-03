@@ -12,7 +12,7 @@ original_dir = os.getcwd()
 base_dir =  original_dir + "/grammars"
 trace_dir = base_dir + "/traces/"
 seq_dir = base_dir + "/sequitur/"
-lexis_dir = "/Users/rtl/Dropbox/PHD_ECN/PROJECTS/ActionGrammars/code/grammars/Lexis"
+lexis_dir = base_dir + "/Lexis/"
 
 class run_grammar():
     """
