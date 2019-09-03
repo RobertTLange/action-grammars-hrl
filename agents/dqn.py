@@ -41,7 +41,6 @@ def init_agent(model, L_RATE, USE_CUDA, NUM_ACTIONS=4,
         agents["current"].load_state_dict(checkpoint)
         agents["target"].load_state_dict(checkpoint)
 
-
     # Initialize optimizer object - single agent
     optimizers = optim.Adam(params=agents["current"].parameters(), lr=L_RATE)
     return agents, optimizers

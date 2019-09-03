@@ -13,11 +13,10 @@ from utils.general_dqn import compute_td_loss, get_logging_stats, run_multiple_t
 from utils.smdp_helpers_dqn import MacroBuffer, macro_action_exec, get_macro_from_agent
 from utils.smdp_helpers_dqn import command_line_grammar_dqn
 
-SEQ_DIR = "../grammars/sequitur/"
+SEQ_DIR = "grammars/sequitur/"
+log_template = "Step {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
 
 def run_dqn_learning(args):
-    log_template = "Step {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
-
     # Set the GPU device on which to run the agent
     USE_CUDA = torch.cuda.is_available()
     if USE_CUDA:
@@ -123,8 +122,6 @@ def run_dqn_learning(args):
 
 
 def run_smdp_dqn_learning(args):
-    log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
-
     # Set the GPU device on which to run the agent
     USE_CUDA = torch.cuda.is_available()
     if USE_CUDA:
@@ -252,8 +249,6 @@ def run_smdp_dqn_learning(args):
 
 
 def run_online_dqn_smdp_learning(args):
-    log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
-
     # Set the GPU device on which to run the agent
     USE_CUDA = torch.cuda.is_available()
     if USE_CUDA:
@@ -301,7 +296,13 @@ def run_online_dqn_smdp_learning(args):
     macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
                                           AGENT, LOAD_CKPT, SEQ_DIR)
 
-    agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA, NUM_ACTIONS)
+    # Setup agent, replay replay_buffer, logging stats df
+    if AGENT == "MLP-DQN" or AGENT == "DOUBLE":
+        agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA,
+                                       NUM_ACTIONS)
+    elif AGENT == "MLP-Dueling-DQN":
+        agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA,
+                                       NUM_ACTIONS)
 
     replay_buffer = ReplayBuffer(capacity=5000)
     macro_buffer = MacroBuffer(capacity=1000)
@@ -358,7 +359,7 @@ def run_online_dqn_smdp_learning(args):
             if (opt_counter+1) % GRAMMAR_EVERY == 0:
                 torch.save(agents["current"].state_dict(), LOAD_CKPT)
                 macros, counts = get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA,
-                                                      AGENT, LOAD_CKPT, SEQ_DIR, )
+                                                      AGENT, LOAD_CKPT, SEQ_DIR, macros)
 
             # Go to next episode if current one terminated or update obs
             if done: break
@@ -404,7 +405,7 @@ if __name__ == "__main__":
         if all_args.RUN_EXPERT_GRAMMAR:
             run_smdp_dqn_learning(all_args)
         elif all_args.RUN_ONLINE_GRAMMAR:
-            run_online_smdp_learning(all_args)
+            run_online_dqn_smdp_learning(all_args)
         else:
             run_dqn_learning(all_args)
     else:
