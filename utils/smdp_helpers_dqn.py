@@ -71,8 +71,8 @@ def action_to_letter(action):
     return dic[action]
 
 
-def rollout_macro_episode(agents, GAMMA, MAX_STEPS, macros=None):
-    env = gym.make("dense-v0")
+def rollout_macro_episode(agents, GAMMA, MAX_STEPS, ENV_ID, macros=None):
+    env = gym.make(ENV_ID)
     # Rollout the policy for a single episode - greedy!
     replay_buffer = ReplayBuffer(capacity=5000)
     obs = env.reset()
@@ -80,7 +80,10 @@ def rollout_macro_episode(agents, GAMMA, MAX_STEPS, macros=None):
     steps = 0
 
     while steps < MAX_STEPS:
-        action = agents["current"].act(obs.flatten(), epsilon=0.05)
+        if ENV_ID == "dense-v0":
+            action = agents["current"].act(obs.flatten(), epsilon=0.05)
+        else:
+            action = agents["current"].act(obs, epsilon=0.05)
         if action < 4:
             next_obs, reward, done, _  = env.step(action)
             steps += 1
@@ -104,14 +107,16 @@ def rollout_macro_episode(agents, GAMMA, MAX_STEPS, macros=None):
 
 
 def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
-                         LOAD_CKPT, SEQ_DIR, macros=None):
+                         LOAD_CKPT, SEQ_DIR, ENV_ID, macros=None):
     # Returns list of strings corresponding to inferred macro-actions
     if AGENT == "MLP-DQN":
         agents, optimizer = init_agent(MLP_DQN, 0, USE_CUDA, NUM_ACTIONS, LOAD_CKPT)
     elif AGENT == "MLP-Dueling-DQN":
         agents, optimizer = init_agent(MLP_DDQN, 0, USE_CUDA, NUM_ACTIONS, LOAD_CKPT)
+    elif AGENT == "CNN-Dueling-DQN":
+        agents, optimizer = init_agent(CNN_DDQN, 0, USE_CUDA, NUM_ACTIONS, LOAD_CKPT)
 
-    steps, episode_rew, er_buffer = rollout_macro_episode(agents, 1, 200, macros)
+    steps, episode_rew, er_buffer = rollout_macro_episode(agents, 1, 200, ENV_ID, macros)
 
     SENTENCE = []
 

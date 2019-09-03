@@ -12,6 +12,8 @@ import torch
 import torch.autograd as autograd
 import torch.multiprocessing as mp
 
+from utils.atari_wrapper import make_atari, wrap_deepmind, wrap_pytorch
+
 
 def command_line_dqn(parent=False):
     parser = argparse.ArgumentParser(add_help=False)
@@ -47,6 +49,9 @@ def command_line_dqn(parent=False):
     parser.add_argument('-agent_fname', '--AGENT_FNAME', action="store",
                         default="mlp_agent.pt", type=str,
                         help='Path to store online agents params')
+    parser.add_argument('-env_id', '--ENV_ID', action="store",
+                        default="dense-v0", type=str,
+                        help='Name of the environment to train on!')
 
     # Network architecture arguments
     parser.add_argument('-input', '--INPUT_DIM', action="store",
@@ -63,8 +68,6 @@ def command_line_dqn(parent=False):
                         type=float, help='Save network and learning stats after # epochs')
     parser.add_argument('-train_batch', '--TRAIN_BATCH_SIZE', action="store",
                         default=32, type=int, help='# images in training batch')
-    parser.add_argument('-capacity', '--CAPACITY', action="store",
-                        default=5000, type=int, help='Memory Storage Capacity')
 
     parser.add_argument('-soft_tau', '--SOFT_TAU', action="store",
                         default=0., type=float,
@@ -94,7 +97,7 @@ def command_line_dqn(parent=False):
     parser.add_argument('-d', '--DOUBLE', action="store_true", default=False,
                         help='Perform double Q-Learning update.')
     parser.add_argument('-capacity', '--CAPACITY', action="store",
-                        default=2000, type=int, help='Storage capacity of ER buffer')
+                        default=5000, type=int, help='Storage capacity of ER buffer')
     if parent:
         return parser
     else:
@@ -129,12 +132,13 @@ def update_target(current_model, target_model):
 
 
 def compute_td_loss(agents, optimizer, replay_buffer,
-                    TRAIN_BATCH_SIZE, GAMMA, Variable, TRAIN_DOUBLE):
+                    TRAIN_BATCH_SIZE, GAMMA, Variable, TRAIN_DOUBLE, ENV_ID):
     obs, acts, reward, next_obs, done = replay_buffer.sample(TRAIN_BATCH_SIZE)
 
-    # Flatten the visual fields into vectors for MLP - not needed for CNN!
-    obs = [ob.flatten() for ob in obs]
-    next_obs = [next_ob.flatten() for next_ob in next_obs]
+    if ENV_ID == "dense-v0":
+        # Flatten the visual fields into vectors for MLP - not needed for CNN!
+        obs = [ob.flatten() for ob in obs]
+        next_obs = [next_ob.flatten() for next_ob in next_obs]
 
     obs = Variable(torch.FloatTensor(np.float32(obs)))
     next_obs = Variable(torch.FloatTensor(np.float32(next_obs)))
@@ -169,12 +173,12 @@ def compute_td_loss(agents, optimizer, replay_buffer,
     return loss
 
 
-def get_logging_stats(opt_counter, agents, GAMMA, NUM_ROLLOUTS, MAX_STEPS):
+def get_logging_stats(opt_counter, agents, GAMMA, NUM_ROLLOUTS, MAX_STEPS, ENV_ID):
     steps = []
     rew = []
 
     for i in range(NUM_ROLLOUTS):
-        step_temp, reward_temp, buffer = rollout_episode(agents, GAMMA, MAX_STEPS)
+        step_temp, reward_temp, buffer = rollout_episode(agents, GAMMA, MAX_STEPS, ENV_ID)
         steps.append(step_temp)
         rew.append(reward_temp)
 
@@ -198,8 +202,15 @@ def get_logging_stats(opt_counter, agents, GAMMA, NUM_ROLLOUTS, MAX_STEPS):
     return reward_stats, steps_stats
 
 
-def rollout_episode(agents, GAMMA, MAX_STEPS):
-    env = gym.make("dense-v0")
+def rollout_episode(agents, GAMMA, MAX_STEPS, ENV_ID):
+    if ENV_ID == "dense-v0":
+        env = gym.make(ENV_ID)
+    else:
+        # Wrap the ATARI env in DeepMind Wrapper
+        env = make_atari(ENV_ID)
+        env = wrap_deepmind(env, episode_life=True, clip_rewards=True,
+                            frame_stack=True, scale=True)
+        env = wrap_pytorch(env)
     # Rollout the policy for a single episode - greedy!
     replay_buffer = ReplayBuffer(capacity=5000)
 
@@ -208,7 +219,10 @@ def rollout_episode(agents, GAMMA, MAX_STEPS):
     steps = 0
 
     while steps < MAX_STEPS:
-        action = agents["current"].act(obs.flatten(), epsilon=0.05)
+        if ENV_ID == "dense-v0":
+            action = agents["current"].act(obs.flatten(), epsilon=0.05)
+        else:
+            action = agents["current"].act(obs, epsilon=0.05)
         next_obs, reward, done, _ = env.step(action)
         steps += 1
 
