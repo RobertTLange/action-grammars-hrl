@@ -59,16 +59,16 @@ elif [[ "$*" == "grid-fig7-left" ]]
 then
     echo "Run Grid Expert Grammar-DQN Experiments (fig 7 left)"
     # RUNNING: BASELINE (DQN + Dueling DQN) EXPERT GRAMMAR (DQN AFTER 1 MIO ITS)
-    python run_learning_grid.py --RUN_TIMES 5 --SAVE_FNAME dqn_stats.csv
-    python run_learning_grid.py --AGENT MLP-Dueling-DQN --RUN_TIMES 5 --SAVE_FNAME dueling_stats.csv
-    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/1000000_mlp_agent.pt --SAVE_FNAME grid_expert_1M.csv
+    python run_learning_grid.py --RUN_TIMES 4 --SAVE_FNAME dqn_stats.csv --VERBOSE
+    python run_learning_grid.py --AGENT MLP-Dueling-DQN --RUN_TIMES 4 --SAVE_FNAME dueling_stats.csv
+    python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/1000000_mlp_agent.pt --SAVE_FNAME grid_expert_1M.csv
 elif [[ "$*" == "grid-fig7-middle" ]]
 then
     echo "Run Grid Transfer Grammar-DQN Experiments (fig 7 middle)"
     # TORUN: TRANSFER GRAMMAR SIMULATIONS (DQN AGENT AFTER 250/500K ITS)
-    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/250000_mlp_agent.pt --SAVE_FNAME grid_transfer_250k.csv
-    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/500000_mlp_agent.pt --SAVE_FNAME grid_transfer_500k.csv
-    python run_learning_grid.py --RUN_TIMES 5 --RUN_EXPERT_GRAMMAR --NUM_MACROS 4 --LOAD_CKPT agents/trained/1000000_mlp_agent.pt --SAVE_FNAME grid_expert_1M_4Macros.csv
+    python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/250000_mlp_agent.pt --SAVE_FNAME grid_transfer_250k.csv --VERBOSE
+    python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/500000_mlp_agent.pt --SAVE_FNAME grid_transfer_500k.csv
+    python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --NUM_MACROS 4 --LOAD_CKPT agents/trained/1000000_mlp_agent.pt --SAVE_FNAME grid_expert_1M_4Macros.csv
 elif [[ "$*" == "grid-online" ]]
 then
     echo "Run Gridworld Online Grammar-DQN Experiments (fig 8 r1 right)"
@@ -81,7 +81,7 @@ elif [[ "$*" == "pong-atari-expert" ]]
 then
     echo "Run Pong ATARI Expert Grammar-DQN Experiments (fig 7 right)"
     # BASELINE SIMULATIONS
-    python run_learning_atari.py --RUN_TIMES 3 --SAVE_FNAME base_stats.csv
+    python run_learning_atari.py --ENV_ID PongNoFrameskip-v4 --VERBOSE --RUN_TIMES 1 --AGENT CNN-Dueling-DQN --SAVE
 elif [[ "$*" == "pong-atari-online" ]]
 then
     echo "Run Pong ATARI Online Grammar-DQN Experiments (fig 8 r2 left)"

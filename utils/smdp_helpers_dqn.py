@@ -5,7 +5,7 @@ import argparse
 
 import torch
 from agents.dqn import MLP_DQN, MLP_DDQN, init_agent
-from utils.general_dqn import command_line_dqn, ReplayBuffer
+from utils.general_dqn import command_line_dqn_grid, ReplayBuffer
 from utils.cfg_grammar_dqn import get_macros
 
 
@@ -130,7 +130,7 @@ def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
 
 
 if __name__ == "__main__":
-    args = command_line_dqn()
+    args = command_line_dqn_grid()
     USE_CUDA = torch.cuda.is_available()
     NUM_ACTIONS = 4
     AGENT = args.AGENT

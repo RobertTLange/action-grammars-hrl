@@ -15,7 +15,7 @@ import torch.multiprocessing as mp
 from utils.atari_wrapper import make_atari, wrap_deepmind, wrap_pytorch
 
 
-def command_line_dqn(parent=False):
+def command_line_dqn_grid(parent=False):
     parser = argparse.ArgumentParser(add_help=False)
     # General logging/saving and device arguments
     parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",

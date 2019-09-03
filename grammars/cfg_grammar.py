@@ -3,7 +3,6 @@ import os
 import math
 import time
 import string
-import random
 import numpy as np
 from collections import Counter
 # from utils import *
@@ -21,7 +20,7 @@ class run_grammar():
     """
     def __init__(self, path_string, k=2):
         self.path_string = path_string
-        random_n = str(random.randint(1, 100000000))
+        random_n = str(np.randint(1, 100000000))
         self.path_output = "output_" + time.strftime("%Y%m%d-%H%M%S-") + random_n + ".txt"
         with open(self.path_string) as f:
             string = f.read().splitlines()

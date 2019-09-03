@@ -9,7 +9,7 @@ import torch.autograd as autograd
 import torch.multiprocessing as mp
 
 from agents.dqn import CNN_DDQN, MLP_DQN, MLP_DDQN, init_agent
-from utils.general_dqn import command_line_dqn, ReplayBuffer, update_target, epsilon_by_episode
+from utils.general_dqn import command_line_dqn_grid, ReplayBuffer, update_target, epsilon_by_episode
 from utils.general_dqn import compute_td_loss, get_logging_stats, run_multiple_times
 from utils.smdp_helpers_dqn import MacroBuffer, macro_action_exec, get_macro_from_agent
 from utils.smdp_helpers_dqn import command_line_grammar_dqn
@@ -127,7 +127,13 @@ def run_dqn_learning(args):
                 start = time.time()
 
             if args.SAVE:
-                if opt_counter+1 in [250000, 500000, 1000000]:
+                if ENV_ID == "dense-v0":
+                    # Gridworld - Updates after which to save expert/transfer agent
+                    save_after_upd = [250000, 500000, 1000000]
+                else:
+                    # ATARI - Updates after which to save expert/transfer agent
+                    save_after_upd = [1000000, 2500000, 5000000]
+                if opt_counter+1 in save_after_upd:
                     agent_path = "agents/trained/" + str(opt_counter+1) + "_" + AGENT_FNAME
                     torch.save(agents["current"].state_dict(), agent_path)
                     print("Saved expert agent to {}".format(agent_path))
@@ -172,6 +178,7 @@ def run_smdp_dqn_learning(args):
     ROLLOUT_EVERY = args.ROLLOUT_EVERY
     UPDATE_EVERY = args.UPDATE_EVERY
     VERBOSE = args.VERBOSE
+    PRINT_EVERY = args.PRINT_EVERY
     CAPACITY = args.CAPACITY
 
     ENV_ID = args.ENV_ID
@@ -207,7 +214,14 @@ def run_smdp_dqn_learning(args):
 
     # Initialize optimization update counter and environment
     opt_counter = 0
-    env = gym.make(ENV_ID)
+    if ENV_ID == "dense-v0":
+        env = gym.make(ENV_ID)
+    else:
+        # Wrap the ATARI env in DeepMind Wrapper
+        env = make_atari(ENV_ID)
+        env = wrap_deepmind(env, episode_life=True, clip_rewards=True,
+                            frame_stack=True, scale=True)
+        env = wrap_pytorch(env)
 
     ep_id = 0
     # RUN TRAINING LOOP OVER EPISODES
@@ -335,7 +349,7 @@ def run_online_dqn_smdp_learning(args):
     # Get random rollout and add num-macros actions
     torch.save(agents["current"].state_dict(), LOAD_CKPT)
     macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
-                                          AGENT, LOAD_CKPT, SEQ_DIR)
+                                          AGENT, LOAD_CKPT, SEQ_DIR, ENV_ID)
 
     # Setup agent, replay replay_buffer, logging stats df
     if AGENT == "MLP-DQN" or AGENT == "DOUBLE":
@@ -356,7 +370,14 @@ def run_online_dqn_smdp_learning(args):
 
     # Initialize optimization update counter and environment
     opt_counter = 0
-    env = gym.make(ENV_ID)
+    if ENV_ID == "dense-v0":
+        env = gym.make(ENV_ID)
+    else:
+        # Wrap the ATARI env in DeepMind Wrapper
+        env = make_atari(ENV_ID)
+        env = wrap_deepmind(env, episode_life=True, clip_rewards=True,
+                            frame_stack=True, scale=True)
+        env = wrap_pytorch(env)
 
     ep_id = 0
     # RUN TRAINING LOOP OVER EPISODES
@@ -444,7 +465,7 @@ def run_online_dqn_smdp_learning(args):
 
 
 if __name__ == "__main__":
-    dqn_args = command_line_dqn(parent=True)
+    dqn_args = command_line_dqn_grid(parent=True)
     all_args = command_line_grammar_dqn(dqn_args)
 
     if all_args.RUN_TIMES == 1:
