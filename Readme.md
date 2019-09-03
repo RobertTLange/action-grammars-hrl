@@ -1,11 +1,13 @@
 # Action Grammars: A Grammar-Induction Based Method for Learning Temporally-Extended Actions
-## Authors: Robert Lange & Aldo Faisal | July 2019
+## Authors: Robert Lange & Aldo Faisal | September 2019
 
-Implementation of [CCN 2019 accepted paper](https://arxiv.org/abs/1907.12477). For the full paper click here. In this work we combine Hierarchical Reinforcement Learning and Grammar induction algorithms in order to define temporal abstractions. These can then be used to alter the action space of the Reinforcement Learning agent.
+Implementation of CCN 2019 accepted poster and NeuRIPS workshop submitted paper. For the full paper click [here](https://arxiv.org/abs/1907.12477).
+
+In this work we combine Hierarchical Reinforcement Learning and Grammar induction algorithms in order to define temporal abstractions. These can then be used to alter the action space of the Reinforcement Learning agent.
 
 This work originated during a MSc project at the FaisalLab at Imperial College London.
 
-<p float="center">
+<p>
   <img src="docs/hanoi_5_learning_curve.png" width="400" />
   <img src="docs/hanoi_6_learning_curve.png" width="400" />
   <img src="docs/grammar_dqn_gridworld_expert.png" width="400" />
@@ -22,8 +24,7 @@ Action Grammars
 +- utils: Folder containing supporting functions
 +- Readme.md: Documentation
 +- requirements.txt: Required dependencies
-+- run_experiments_grid.sh: Executes gridworld experiments
-+- run_experiments_towers.sh: Executes Towers of Hanoi experiments
++- run_experiments.sh: Executes experiments & setup installations
 +- run_learning_grid.py: Learning loop gridworld
 +- run_learning_towers.py: Learning loop Towers of Hanoi
 +- setup.bash: Setup script installing things
@@ -58,7 +59,7 @@ jupyter notebook visualize_results.ipynb
 
 There are many possible avenues that I want to explore in the following months. Feel free to contact me in case of any questions!
 
-August 2019,
+September 2019,
 
 Robert Tjarko Lange
 

@@ -16,6 +16,7 @@ from utils.general_towers import get_optimal_macros, command_line_towers, DotDic
 
 def run_learning(args):
     LEARN_TYPE = args.LEARN_TYPE
+    GRAMMAR_TYPE = args.GRAMMAR_TYPE
     TRANSFER_DISTANCE = args.TRANSFER_DISTANCE
 
     N_DISKS = args.N_DISKS
@@ -44,11 +45,11 @@ def run_learning(args):
     if LEARN_TYPE == "Q-Learning":
         agent = Agent_Q(env)
     elif LEARN_TYPE == "Imitation-SMDP-Q-Learning":
-        macros = get_optimal_macros(env, N_DISKS, "Sequitur")
+        macros = get_optimal_macros(env, N_DISKS, GRAMMAR_TYPE)
         agent = SMDP_Agent_Q(env, macros)
     elif LEARN_TYPE == "Transfer-SMDP-Q-Learning":
         macros = get_optimal_macros(env, N_DISKS - TRANSFER_DISTANCE,
-                                    "Sequitur")
+                                    GRAMMAR_TYPE)
         agent = SMDP_Agent_Q(env, macros)
 
 
@@ -96,27 +97,6 @@ def run_learning(args):
         df_means.to_csv("results/TOH/" + str(args.RUN_TIMES) + "_RUNS_" + str(args.N_DISKS) + "_DISKS_" + LEARN_TYPE  + "_" + args.SAVE_FNAME)
 
     return df_means
-
-
-def run_multiple_times(args, run_fct, save_fname):
-    cpu_count = mp.cpu_count()
-    # Clone arguments into list & Distribute workload across GPUs
-    args_across_workers = [copy.deepcopy(args) for r in range(args.RUN_TIMES)]
-
-    for r in range(args.RUN_TIMES):
-        args_across_workers[r].seed = r
-
-    # Execute different runs/random seeds in parallel
-    pool = mp.Pool(cpu_count-1)
-    df_across_runs = pool.map(run_fct, args_across_workers)
-    pool.close()
-
-    # Post process results
-    df_concat = pd.concat(df_across_runs)
-    by_row_index = df_concat.groupby(df_concat.index)
-    df_means, df_stds = by_row_index.mean(), by_row_index.std()
-    df_means.to_csv(save_fname)
-    return df_means, df_stds
 
 
 if __name__ == "__main__":

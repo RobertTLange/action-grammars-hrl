@@ -41,7 +41,9 @@ then
 elif [[ "$*" == "toh-fig6-right" ]]
 then
     echo "Run Towers of Hanoi Tabular Experiments (figure 6 right plot)"
-    # TODO: 6 DISK ENVIRONMENT (2, 3, 4 Sequitur) and G-Lexis
+    # TODO: 6 DISK ENVIRONMENT 3 Sequitur and G-Lexis
+    python run_learning_towers.py --N_DISKS 6 --LEARN_TYPE Imitation-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE 3-Sequitur --SAVE_FNAME 3_seq_TOH.csv
+    python run_learning_towers.py --N_DISKS 6 --LEARN_TYPE Imitation-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE G-Lexis --SAVE_FNAME g_lexis_TOH.csv
 elif [[ "$*" == "toh-online" ]]
 then
     # TODO: ONLINE GRAMMAR EXPERIMENTS 5+6 Disk Environment Schedule k?!

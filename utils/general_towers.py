@@ -35,6 +35,8 @@ def command_line_towers():
                         help='# Disks Hanoi Environment')
     parser.add_argument('-l_type', '--LEARN_TYPE', action="store",
                         default="Q-Learning", type=str, help='Type of learning algo')
+    parser.add_argument('-g_type', '--GRAMMAR_TYPE', action="store",
+                        default="2-Sequitur", type=str, help='Type of grammar inference algo')
     parser.add_argument('-t_dist', '--TRANSFER_DISTANCE', action="store",
                         default=1, type=int,
                         help='# Disks Distance in optimal Grammar')
@@ -155,13 +157,19 @@ def discounted_return(rewards, gamma):
 
 # Dictionary of optimal Sequitur extracted macro-actions
 def get_optimal_macros(env, N, cfg_type):
-    seq_macros = {4: ["abd"],
-                  5: ["bafbcd", "baf", "ec", "bc"],
-                  6: ["abdaef", "abdced", "abdaef", "aedce",
+    seq2_macros = {4: ["abd"],
+                   5: ["bafbcd", "baf", "ec", "bc"],
+                   6: ["abdaef", "abdced", "abdaef", "aedce",
                       "abdce", "abd", "ae", "ce"],
-                  7: ["bafbcdbafecfbafbcdbcfecd", "bafbcdbafecf",
+                   7: ["bafbcdbafecfbafbcdbcfecd", "bafbcdbafecf",
                       "bafecdbcfecbafbcdbcfec", "bafbcdbafec",
                       "bcfecbafbcec"]}
+
+    seq3_macros = {4: ["abd"],
+                   5: ["baf", "bc"],
+                   6: ['abdaef', 'abd', 'ced', 'ae', 'ce', 'ab'],
+                   7: ['bafbcd', 'baf', 'ecf', 'bcf', 'ecd', 'ba', 'dbaf',
+                       'dbcf', 'ec', 'bafbc', 'bc']}
 
     lexis_macros = {4: ['abd'],
                     5: ['bafbcdb'],
@@ -169,12 +177,14 @@ def get_optimal_macros(env, N, cfg_type):
                     7: ['bafbcdbafecfbafbcdbcfecdbafbcdb', 'fec',
                         'bafbcdb', 'fecfbafecdbcfec']}
 
-    if cfg_type == "Sequitur":
-        macros = get_macros_from_productions(env, seq_macros[N])
+    if cfg_type == "2-Sequitur":
+        macros = get_macros_from_productions(env, seq2_macros[N])
+        return macros
+    elif cfg_type == "3-Sequitur":
+        macros = get_macros_from_productions(env, seq3_macros[N])
         return macros
     elif cfg_type == "G-Lexis":
-        macros = get_macros_from_productions(env,
-                                             lexis_macros[N])
+        macros = get_macros_from_productions(env, lexis_macros[N])
         return macros
     else:
         raise ValueError("Provide a valid Context-Free Grammar")
