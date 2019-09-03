@@ -6,6 +6,7 @@ import gridworld
 
 import torch
 import torch.autograd as autograd
+import torch.multiprocessing as mp
 
 from agents.dqn import MLP_DQN, MLP_DDQN, init_agent
 from utils.general_dqn import command_line_dqn, ReplayBuffer, update_target, epsilon_by_episode
@@ -17,6 +18,8 @@ SEQ_DIR = "grammars/sequitur/"
 log_template = "Step {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
 
 def run_dqn_learning(args):
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
     # Set the GPU device on which to run the agent
     USE_CUDA = torch.cuda.is_available()
     if USE_CUDA:
@@ -39,6 +42,7 @@ def run_dqn_learning(args):
     UPDATE_EVERY = args.UPDATE_EVERY
     VERBOSE = args.VERBOSE
     PRINT_EVERY = args.PRINT_EVERY
+    CAPACITY = args.CAPACITY
 
     AGENT = args.AGENT
     AGENT_FNAME = args.AGENT_FNAME
@@ -52,8 +56,10 @@ def run_dqn_learning(args):
         agents, optimizer = init_agent(MLP_DQN, L_RATE, USE_CUDA)
     elif AGENT == "MLP-Dueling-DQN":
         agents, optimizer = init_agent(MLP_DDQN, L_RATE, USE_CUDA)
+    elif AGENT == "CNN-Dueling-DQN":
+        agents, optimizer = init_agent(CNN_DDQN, L_RATE, USE_CUDA)
 
-    replay_buffer = ReplayBuffer(capacity=5000)
+    replay_buffer = ReplayBuffer(capacity=CAPACITY)
 
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
                                          "rew_median", "rew_10th_p", "rew_90th_p"])
@@ -107,7 +113,7 @@ def run_dqn_learning(args):
                 start = time.time()
 
             if args.SAVE:
-                if opt_counter+1 in [10, 250000, 500000, 1000000]:
+                if opt_counter+1 in [250000, 500000, 1000000]:
                     agent_path = "agents/trained/" + str(opt_counter+1) + "_" + AGENT_FNAME
                     torch.save(agents["current"].state_dict(), agent_path)
                     print("Saved expert agent to {}".format(agent_path))
@@ -128,6 +134,9 @@ def run_dqn_learning(args):
 
 
 def run_smdp_dqn_learning(args):
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
+
     # Set the GPU device on which to run the agent
     USE_CUDA = torch.cuda.is_available()
     if USE_CUDA:
@@ -252,6 +261,8 @@ def run_smdp_dqn_learning(args):
 
 
 def run_online_dqn_smdp_learning(args):
+    np.random.seed(args.seed)
+    torch.manual_seed(args.seed)
     # Set the GPU device on which to run the agent
     USE_CUDA = torch.cuda.is_available()
     if USE_CUDA:
@@ -364,10 +375,6 @@ def run_online_dqn_smdp_learning(args):
                 macros, counts = get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA,
                                                       AGENT, LOAD_CKPT, SEQ_DIR, macros)
 
-            # Go to next episode if current one terminated or update obs
-            if done: break
-            else: obs = next_obs
-
             # On-Policy Rollout for Performance evaluation
             if (opt_counter+1) % ROLLOUT_EVERY == 0:
                 r_stats, s_stats = get_logging_stats(opt_counter, agents,
@@ -386,6 +393,10 @@ def run_online_dqn_smdp_learning(args):
 
             if (opt_counter+1) % UPDATE_EVERY == 0:
                 update_target(agents["current"], agents["target"])
+
+            # Go to next episode if current one terminated or update obs
+            if done: break
+            else: obs = next_obs
 
         ep_id +=1
     # Finally save all results!
@@ -412,6 +423,7 @@ if __name__ == "__main__":
         else:
             run_dqn_learning(all_args)
     else:
+        mp.set_start_method('forkserver', force=True)
         if all_args.RUN_EXPERT_GRAMMAR:
             run_multiple_times(all_args, run_smdp_dqn_learning)
         elif all_args.RUN_ONLINE_GRAMMAR:

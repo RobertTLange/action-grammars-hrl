@@ -6,9 +6,11 @@ import pandas as pd
 import numpy as np
 from collections import deque
 import gym
+import copy
 
 import torch
 import torch.autograd as autograd
+import torch.multiprocessing as mp
 
 
 def command_line_dqn(parent=False):
@@ -38,6 +40,8 @@ def command_line_dqn(parent=False):
                         default=False, help='Save final agents and log')
     parser.add_argument('-device', '--device_id', action="store",
                         default=0, type=int, help='Device id on which to train')
+    parser.add_argument('-random_seed', '--seed', action="store",
+                        default=0, type=int, help='random seed of agents')
     parser.add_argument('-fname', '--SAVE_FNAME', action="store",
                         default="temp", type=str, help='Filename to which to save logs')
     parser.add_argument('-agent_fname', '--AGENT_FNAME', action="store",
@@ -59,6 +63,8 @@ def command_line_dqn(parent=False):
                         type=float, help='Save network and learning stats after # epochs')
     parser.add_argument('-train_batch', '--TRAIN_BATCH_SIZE', action="store",
                         default=32, type=int, help='# images in training batch')
+    parser.add_argument('-capacity', '--CAPACITY', action="store",
+                        default=5000, type=int, help='Memory Storage Capacity')
 
     parser.add_argument('-soft_tau', '--SOFT_TAU', action="store",
                         default=0., type=float,
@@ -157,7 +163,7 @@ def compute_td_loss(agents, optimizer, replay_buffer,
     # Perform optimization step for agent
     optimizer.zero_grad()
     loss.backward()
-    torch.nn.utils.clip_grad_norm(agents["current"].parameters(), 0.5)
+    torch.nn.utils.clip_grad_norm(agents["current"].parameters(), 2)
     optimizer.step()
 
     return loss
@@ -226,6 +232,7 @@ def run_multiple_times(args, run_fct):
     if gpu_count > 0:
         gpu_counter = 0
         for r in range(args.RUN_TIMES):
+            args_across_workers[r].seed = r
             args_across_workers[r].device_id = gpu_counter
             gpu_counter += 1
             if gpu_counter > gpu_count-1:

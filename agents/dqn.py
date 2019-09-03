@@ -7,8 +7,6 @@ import torch.nn as nn
 import torch.autograd as autograd
 import torch.optim as optim
 
-torch.manual_seed(0)
-
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -120,16 +118,18 @@ class MLP_DDQN(nn.Module):
 
 
 class CNN_DDQN(nn.Module):
-    def __init__(self, params):
+    def __init__(self, NUM_ACTIONS):
         super(CNN_DDQN, self).__init__()
 
-        self.input_shape = params.observation_shape
-        self.num_actions = params.action_space_size
+        self.input_shape = (4, 84, 84)
+        self.num_actions = NUM_ACTIONS
 
         self.features = nn.Sequential(
-            nn.Conv2d(self.input_shape[0], 32, kernel_size=3, stride=1),
+            nn.Conv2d(self.input_shape[0], 32, kernel_size=8, stride=4),
             nn.ReLU(),
-            nn.Conv2d(32, 64, kernel_size=2, stride=3),
+            nn.Conv2d(32, 64, kernel_size=4, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(64, 64, kernel_size=3, stride=1),
             nn.ReLU(),
             )
 
