@@ -229,3 +229,4 @@ if __name__ == "__main__":
     os.chdir(lexis_dir)
     Grammar.run_lexis()
     Grammar.clean_output()
+    # python run_learning_grid.py --RUN_TIMES 1 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/250000_mlp_agent.pt --SAVE_FNAME grid_transfer_250k.csv --VERBOSE --GRAMMAR_TYPE lexis
