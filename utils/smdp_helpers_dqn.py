@@ -19,6 +19,8 @@ def command_line_grammar_dqn(dqn_parser):
                         default=False)
     parser.add_argument('-grammar_upd', '--GRAMMAR_EVERY', action="store",
                         default=1000, type=int, help='#Updates after which to infer new grammar')
+    parser.add_argument('-g_type', '--GRAMMAR_TYPE', action="store",
+                        default="sequitur", type=str, help='Context-Free Grammar Type')
     parser.add_argument('-run_online', '--RUN_ONLINE_GRAMMAR', action='store_true',
                         default=False)
     return parser.parse_args()
@@ -107,7 +109,8 @@ def rollout_macro_episode(agents, GAMMA, MAX_STEPS, ENV_ID, macros=None):
 
 
 def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
-                         LOAD_CKPT, SEQ_DIR, ENV_ID, macros=None):
+                         LOAD_CKPT, GRAMMAR_DIR, ENV_ID, macros=None,
+                         g_type="sequitur", k=2):
     # Returns list of strings corresponding to inferred macro-actions
     if AGENT == "MLP-DQN":
         agents, optimizer = init_agent(MLP_DQN, 0, USE_CUDA, NUM_ACTIONS, LOAD_CKPT)
@@ -125,7 +128,8 @@ def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
 
     SENTENCE = "".join(SENTENCE)
     # Collect actions from rollout into string & call sequitur
-    macros, counts = get_macros(NUM_MACROS, SENTENCE, 4, SEQ_DIR, k=2)
+    macros, counts = get_macros(NUM_MACROS, SENTENCE, 4, GRAMMAR_DIR, k=k, g_type=g_type)
+    print(macros)
     return macros, counts
 
 

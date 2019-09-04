@@ -62,18 +62,15 @@ def command_line_dqn_grid(parent=False):
                         default=4, type=int, help='Number of Actions')
 
     parser.add_argument('-gamma', '--GAMMA', action="store",
-                        default=0.9, type=float,
+                        default=0.99, type=float,
                         help='Discount factor')
     parser.add_argument('-l_r', '--L_RATE', action="store", default=0.001,
                         type=float, help='Save network and learning stats after # epochs')
     parser.add_argument('-train_batch', '--TRAIN_BATCH_SIZE', action="store",
                         default=32, type=int, help='# images in training batch')
 
-    parser.add_argument('-soft_tau', '--SOFT_TAU', action="store",
-                        default=0., type=float,
-                        help='Polyak Averaging tau for target network update')
     parser.add_argument('-update_upd', '--UPDATE_EVERY', action="store",
-                        default=100, type=int,
+                        default=500, type=int,
                         help='Update target network after # batch updates')
 
     parser.add_argument('-e_start', '--EPS_START', action="store", default=1,
@@ -97,7 +94,7 @@ def command_line_dqn_grid(parent=False):
     parser.add_argument('-d', '--DOUBLE', action="store_true", default=False,
                         help='Perform double Q-Learning update.')
     parser.add_argument('-capacity', '--CAPACITY', action="store",
-                        default=5000, type=int, help='Storage capacity of ER buffer')
+                        default=20000, type=int, help='Storage capacity of ER buffer')
     if parent:
         return parser
     else:

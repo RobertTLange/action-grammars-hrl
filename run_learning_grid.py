@@ -16,6 +16,8 @@ from utils.smdp_helpers_dqn import command_line_grammar_dqn
 from utils.atari_wrapper import make_atari, wrap_deepmind, wrap_pytorch
 
 SEQ_DIR = "grammars/sequitur/"
+LEXIS_DIR = "grammars/Lexis/"
+
 log_template = "Step {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
 
 def run_dqn_learning(args):
@@ -189,9 +191,15 @@ def run_smdp_dqn_learning(args):
     # Get macros from expert dqn rollout
     LOAD_CKPT = args.LOAD_CKPT
     NUM_MACROS = args.NUM_MACROS
+    GRAMMAR_TYPE = args.GRAMMAR_TYPE
 
-    macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
-                                          AGENT, LOAD_CKPT, SEQ_DIR, ENV_ID)
+    if GRAMMAR_TYPE == "sequitur":
+        GRAMMAR_DIR = SEQ_DIR
+    elif GRAMMAR_TYPE == "lexis":
+        GRAMMAR_DIR = LEXIS_DIR
+
+    macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA, AGENT,
+                                          LOAD_CKPT, GRAMMAR_DIR, ENV_ID, g_type=GRAMMAR_TYPE)
 
     NUM_ACTIONS = 4 + NUM_MACROS
     if AGENT == "DOUBLE": TRAIN_DOUBLE = True
@@ -332,7 +340,13 @@ def run_online_dqn_smdp_learning(args):
     # Get macros from expert dqn rollout
     LOAD_CKPT = args.LOAD_CKPT
     NUM_MACROS = args.NUM_MACROS
+    GRAMMAR_TYPE = args.GRAMMAR_TYPE
     GRAMMAR_EVERY = args.GRAMMAR_EVERY
+
+    if GRAMMAR_TYPE == "sequitur":
+        GRAMMAR_DIR = SEQ_DIR
+    elif GRAMMAR_TYPE == "lexis":
+        GRAMMAR_DIR = LEXIS_DIR
 
     NUM_ACTIONS = 4 + NUM_MACROS
     if AGENT == "DOUBLE": TRAIN_DOUBLE = True
@@ -349,7 +363,8 @@ def run_online_dqn_smdp_learning(args):
     # Get random rollout and add num-macros actions
     torch.save(agents["current"].state_dict(), LOAD_CKPT)
     macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
-                                          AGENT, LOAD_CKPT, SEQ_DIR, ENV_ID)
+                                          AGENT, LOAD_CKPT, GRAMMAR_DIR, ENV_ID,
+                                          g_type=GRAMMAR_TYPE)
 
     # Setup agent, replay replay_buffer, logging stats df
     if AGENT == "MLP-DQN" or AGENT == "DOUBLE":
@@ -425,8 +440,8 @@ def run_online_dqn_smdp_learning(args):
             if (opt_counter+1) % GRAMMAR_EVERY == 0:
                 torch.save(agents["current"].state_dict(), LOAD_CKPT)
                 macros, counts = get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA,
-                                                      AGENT, LOAD_CKPT, SEQ_DIR, ENV_ID,
-                                                      macros)
+                                                      AGENT, LOAD_CKPT, GRAMMAR_DIR, ENV_ID,
+                                                      macros, GRAMMAR_TYPE)
 
             # On-Policy Rollout for Performance evaluation
             if (opt_counter+1) % ROLLOUT_EVERY == 0:

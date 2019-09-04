@@ -14,10 +14,10 @@ class run_grammar():
     Output: Grammar object with processed Sequitur/Lexis output
     """
     def __init__(self, string, k=2):
-        self.path_output = "output_" + time.strftime("%Y%m%d-%H%M%S-") + ".txt"
+        random_n = str(np.random.randint(1, 100000000))
+        self.path_output = "output_" + time.strftime("%Y%m%d-%H%M%S-") + random_n + ".txt"
         self.string = string
         self.k = k
-        self.g_type = "sequitur"
 
     def run_sequitur(self):
         # Run the Sequitur grammar inferene, outfile results and read them in
@@ -25,14 +25,30 @@ class run_grammar():
         try:
             os.system('echo ' + self.string + ' | ./sequitur -p -k'
                       + str(self.k) + ' >> ' + self.path_output)
-            print(self.path_output)
             with open(self.path_output) as f:
                 self.output = f.read().splitlines()
         except:
             print("Sequitur failed")
         if os.path.exists(self.path_output): os.remove(self.path_output)
 
-    def clean_output(self):
+    def run_lexis(self):
+        # Run the lexis grammar inferene, outfile results and read them in
+        os.remove(self.path_output) if os.path.exists(self.path_output) else None
+        random_n = str(np.random.randint(1, 100000000))
+        path_input =  "input_" + time.strftime("%Y%m%d-%H%M%S-") + random_n + ".txt"
+        os.system('echo ' + self.string + ' >> ' + path_input)
+        try:
+            command = 'python Lexis.py -m -t c -f i ' + path_input + ' >> ' + self.path_output
+            os.system(command)
+
+            with open(self.path_output) as f:
+                self.output = f.read().splitlines()
+            print(self.output)
+            self.g_type = "lexis"
+        except:
+            print("Lexis failed")
+
+    def clean_sequitur(self):
         # Extract non-terminal symbols and corresponding productions
         nonterminals = []
         productions = []
@@ -114,15 +130,19 @@ class run_grammar():
         return comp_ratio, shannon_pre, shannon_post
 
 
-def get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, seq_dir, k=2):
+def get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, GRAMMAR_DIR, k=2, g_type="sequitur"):
     original_dir = os.getcwd()
     primitives =  list(string.ascii_lowercase)[:NUM_PRIMITIVES]
 
     Grammar = run_grammar(SENTENCE, k)
 
-    os.chdir(seq_dir)
-    Grammar.run_sequitur()
-    Grammar.clean_output()
+    os.chdir(GRAMMAR_DIR)
+    if g_type == "sequitur":
+        Grammar.run_sequitur()
+        Grammar.clean_sequitur()
+    elif g_type == "lexis":
+        Grammar.run_lexis()
+        Grammar.clean_lexis()
 
     temp_S = Grammar.S.split("-")
     occ = dict(Counter(temp_S))

@@ -178,6 +178,7 @@ def get_macros(no_macros, sentence, num_primitives, num_disks,
     timestr = time.strftime("%Y%m%d-%H%M%S")
     random_n = str(random.randint(1, 100000000))
     temp = "temp_" + timestr + str(random_n) + ".txt"
+    print(temp)
 
     with open(trace_dir + temp, "w") as myfile:
         myfile.write(sentence)
