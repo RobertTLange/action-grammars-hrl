@@ -92,6 +92,21 @@ if __name__ == "__main__":
     dqn_args = command_line_dqn_atari(parent=True)
     all_args = command_line_grammar_dqn(dqn_args)
 
-    run_dqn_learning(all_args)
-
     # python run_learning_atari.py --ENV_ID PongNoFrameskip-v4 --VERBOSE --RUN_TIMES 1 --AGENT CNN-Dueling-DQN
+
+    if all_args.RUN_TIMES == 1:
+        print("START RUNNING {} AGENT LEARNING FOR 1 TIME".format(all_args.AGENT))
+        if all_args.RUN_EXPERT_GRAMMAR:
+            run_smdp_dqn_learning(all_args)
+        elif all_args.RUN_ONLINE_GRAMMAR:
+            run_online_dqn_smdp_learning(all_args)
+        else:
+            run_dqn_learning(all_args)
+    else:
+        mp.set_start_method('forkserver', force=True)
+        if all_args.RUN_EXPERT_GRAMMAR:
+            run_multiple_times(all_args, run_smdp_dqn_learning)
+        elif all_args.RUN_ONLINE_GRAMMAR:
+            run_multiple_times(all_args, run_online_dqn_smdp_learning)
+        else:
+            run_multiple_times(all_args, run_dqn_learning)
