@@ -7,6 +7,19 @@ import random
 import numpy as np
 from collections import Counter
 
+def letter_to_action(string_action):
+    alphabet = list(string.ascii_lowercase)
+    numb_id = list(range(len(alphabet)))
+    dic = dict(zip(alphabet, numb_id))
+    return dic[string_action]
+
+
+def action_to_letter(action):
+    alphabet = list(string.ascii_lowercase)
+    numb_id = list(range(len(alphabet)))
+    dic = dict(zip(numb_id, alphabet))
+    return dic[action]
+
 
 class run_grammar():
     """
@@ -206,7 +219,6 @@ def get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, GRAMMAR_DIR, k=2, g_type="s
         Grammar.clean_sequitur()
     elif g_type == "lexis":
         Grammar.run_lexis()
-        print(Grammar.output)
         Grammar.clean_lexis()
 
     temp_S = Grammar.S.split("-")

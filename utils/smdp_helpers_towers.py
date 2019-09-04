@@ -7,11 +7,12 @@ import gym
 import gym_hanoi
 
 from utils.q_helpers_towers import  q_learning
-from grammars.cfg_grammar import get_macros
+from utils.cfg_grammar import get_macros, letter_to_action, action_to_letter
 from agents.q_agent import QTable, Agent_Q
 from utils.general_towers import discounted_return, get_logging_stats
-from utils.general_towers import learning_params, ReplayBuffer
+from utils.general_towers import learning_params, ReplayBuffer, rollout_episode
 from utils.general_towers import macro_step, get_macros_from_productions
+from utils.q_helpers_towers import q_learning_update
 
 
 def smdp_q_learning_update(GAMMA, ALPHA, LAMBDA, q_func, eligibility,
@@ -130,7 +131,7 @@ def smdp_q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
 def smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
                            GAMMA, ALPHA, LAMBDA, EPSILON,
                            ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME,
-                           PRINT_EVERY, VERBOSE,
+                           PRINT_EVERY, VERBOSE, GRAMMAR_DIR, g_type,
                            seq_k_schedule, seq_update_schedule):
     start = time.time()
     log_template = "E {:>2} | T {:.1f} | Median R {:.1f} | Mean R {:.1f} | Median S {:.1f} | Mean S {:.1f}"
@@ -147,9 +148,81 @@ def smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
     update_counter = 0
     ep_id = 0
 
+    # Initialize counter to keep track of grammar updates
+    grammar_counter = 0
     env = gym.make("Hanoi-v0")
     env.set_env_parameters(N_DISKS, env_noise=0, verbose=False)
 
+    # Run initial Q-Learning before first macro acquisition
+    agent = Agent_Q(env)
+    while update_counter < seq_update_schedule[0]:
+        state = env.reset()
+        eligibility = QTable(np.zeros(N_DISKS*(3, ) + (6,)))
+
+        old_greedy_choice = None
+        old_action = None
+        old_state = None
+
+        for i in range(MAX_STEPS):
+            action = agent.epsilon_greedy_action(state, EPSILON)
+            next_state, reward, done, _ = env.step(action)
+            greedy_choice = agent.greedy_action(next_state)
+
+            # Update value function
+            eligibility, tde = q_learning_update(GAMMA, ALPHA, LAMBDA,
+                                                 agent.q_func, eligibility,
+                                                 state, action, next_state,
+                                                 reward, done, i,
+                                                 old_greedy_choice, old_action,
+                                                 old_state)
+            update_counter += 1
+            # Extend replay buffer
+            er_buffer.push(ep_id, state, action, reward, next_state, done)
+
+            # Update variables
+            old_state = state
+            old_action = action
+            old_greedy_choice = greedy_choice
+            state = next_state
+
+            if (update_counter+1) % ROLLOUT_EVERY == 0:
+                r_stats, s_stats = get_logging_stats(update_counter, agent, GAMMA,
+                                                     N_DISKS, MAX_STEPS, NUM_ROLLOUTS)
+
+                reward_stats = pd.concat([reward_stats, r_stats], axis=0)
+                step_stats = pd.concat([step_stats, s_stats], axis=0)
+
+            if VERBOSE and update_counter % PRINT_EVERY == 0:
+                stop = time.time()
+                print(log_template.format(update_counter, stop-start,
+                                          r_stats.loc[0, "rew_median"],
+                                          r_stats.loc[0, "rew_mean"],
+                                          s_stats.loc[0, "steps_median"],
+                                          s_stats.loc[0, "steps_mean"]))
+                start = time.time()
+
+            if done:
+                break
+
+        ep_id += 1
+
+    # Rollout Episode with agent and infer macros
+    _, _, buffer_to_infer = rollout_episode(agent, MAX_STEPS, N_DISKS, GAMMA,
+                                            record_macros=False)
+
+    SENTENCE = []
+    for step in range(len(buffer_to_infer)):
+        SENTENCE.append(action_to_letter(buffer_to_infer[step][2]))
+
+    SENTENCE = "".join(SENTENCE)
+    NUM_MACROS = 5
+    macros, counts = get_macros(NUM_MACROS, SENTENCE, 6, GRAMMAR_DIR,
+                                k=seq_k_schedule[0], g_type=g_type)
+
+    agent = endorse_agent(agent, macros)
+
+
+    # Run SMDP-Loop with Inferred Grammar Macros
     while update_counter < NUM_UPDATES:
 
         state = env.reset()
@@ -215,3 +288,19 @@ def smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
     df_to_save = df_to_save.reset_index()
     df_to_save.to_csv("results/TOH/" + STATS_FNAME)
     return df_to_save
+
+
+class TransferValueBuffer():
+    def __init__(self):
+        self.macros = []
+        self.macros_active = []
+
+    def transfer_values(agent, macros_to_transfer):
+        return
+
+
+def endorse_agent(agent, macros, value_buffer):
+    # Function takes trained agent and a set of macros and transfers value estimates
+    return agent
+
+# python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning --RUN_TIMES 1 --GRAMMAR_TYPE 2-Sequitur --SAVE_FNAME seq_TOH.csv --VERBOSE

@@ -1,4 +1,6 @@
 import gym
+import string
+
 import gridworld
 from collections import deque
 import argparse
@@ -6,7 +8,7 @@ import argparse
 import torch
 from agents.dqn import MLP_DQN, MLP_DDQN, init_agent
 from utils.general_dqn import command_line_dqn_grid, ReplayBuffer
-from grammars.cfg_grammar import get_macros
+from utils.cfg_grammar import get_macros, letter_to_action, action_to_letter
 
 
 def command_line_grammar_dqn(dqn_parser):
@@ -63,20 +65,10 @@ def macro_action_exec(ep_id, obs, steps, replay_buffer, macro, env, GAMMA):
     return next_obs, macro_rew, done, _
 
 
-def letter_to_action(string_action):
-    dic = {"a": 0, "b": 1, "c": 2, "d": 3}
-    return dic[string_action]
-
-
-def action_to_letter(action):
-    dic = {0: "a", 1: "b", 2: "c", 3: "d"}
-    return dic[action]
-
-
 def rollout_macro_episode(agents, GAMMA, MAX_STEPS, ENV_ID, macros=None):
     env = gym.make(ENV_ID)
     # Rollout the policy for a single episode - greedy!
-    replay_buffer = ReplayBuffer(capacity=5000)
+    replay_buffer = ReplayBuffer(capacity=20000)
     obs = env.reset()
     episode_rew = 0
     steps = 0
@@ -127,8 +119,19 @@ def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
         SENTENCE.append(action_to_letter(er_buffer[step][3]))
 
     SENTENCE = "".join(SENTENCE)
+
+    if ENV_ID == "dense-v0":
+        NUM_PRIMITIVES = 4
+    elif ENV_ID == "PongNoFrameskip-v4":
+        NUM_PRIMITIVES = 6
+    elif ENV_ID == "SeaquestNoFrameskip-v4":
+        NUM_PRIMITIVES = 18
+    elif ENV_ID == "MsPacmanNoFrameskip-v4":
+        NUM_PRIMITIVES = 9
+
     # Collect actions from rollout into string & call sequitur
-    macros, counts = get_macros(NUM_MACROS, SENTENCE, 4, GRAMMAR_DIR, k=k, g_type=g_type)
+    macros, counts = get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, GRAMMAR_DIR,
+                                k=k, g_type=g_type)
     return macros, counts
 
 

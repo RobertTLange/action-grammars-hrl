@@ -144,13 +144,15 @@ def run_dqn_learning(args):
             if done: break
             else: obs = next_obs
         ep_id += 1
+
+    # Save the logging dataframe
+    df_to_save = pd.concat([reward_stats, step_stats], axis=1)
+    df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
+    df_to_save = df_to_save.reset_index()
+
     if args.SAVE:
         # Finally save all results!
         torch.save(agents["current"].state_dict(), "agents/" + str(NUM_UPDATES) + "_" + AGENT_FNAME)
-        # Save the logging dataframe
-        df_to_save = pd.concat([reward_stats, step_stats], axis=1)
-        df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
-        df_to_save = df_to_save.reset_index()
         df_to_save.to_csv("results/"  + args.AGENT + "_" + STATS_FNAME)
     return df_to_save
 
@@ -293,14 +295,16 @@ def run_smdp_dqn_learning(args):
             else: obs = next_obs
 
         ep_id +=1
+
+    # Save the logging dataframe
+    df_to_save = pd.concat([reward_stats, step_stats], axis=1)
+    df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
+    df_to_save = df_to_save.reset_index()
+
     if args.SAVE:
         # Finally save all results!
         torch.save(agents["current"].state_dict(),
                    "agents/" + AGENT + "_" + AGENT_FNAME)
-        # Save the logging dataframe
-        df_to_save = pd.concat([reward_stats, step_stats], axis=1)
-        df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
-        df_to_save = df_to_save.reset_index()
         df_to_save.to_csv("results/" + str(NUM_MACROS) + "_" + STATS_FNAME)
     return df_to_save
 
@@ -308,6 +312,7 @@ def run_smdp_dqn_learning(args):
 def run_online_dqn_smdp_learning(args):
     np.random.seed(args.seed)
     torch.manual_seed(args.seed)
+
     # Set the GPU device on which to run the agent
     USE_CUDA = torch.cuda.is_available()
     if USE_CUDA:
@@ -469,12 +474,12 @@ def run_online_dqn_smdp_learning(args):
 
         ep_id +=1
     # Finally save all results!
+    df_to_save = pd.concat([reward_stats, step_stats], axis=1)
+    df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
+    df_to_save = df_to_save.reset_index()
     if args.SAVE:
         torch.save(agents["current"].state_dict(), "agents/online_" + AGENT_FNAME)
         # Save the logging dataframe
-        df_to_save = pd.concat([reward_stats, step_stats], axis=1)
-        df_to_save = df_to_save.loc[:,~df_to_save.columns.duplicated()]
-        df_to_save = df_to_save.reset_index()
         df_to_save.to_csv("results/online_" + STATS_FNAME)
     return df_to_save
 

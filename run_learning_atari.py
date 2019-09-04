@@ -30,10 +30,10 @@ def command_line_dqn_atari(parent=False):
                         default=5, type=int,
                         help='# Times to run agent learning')
     parser.add_argument('-n_upd', '--NUM_UPDATES', action="store",
-                        default=5000000, type=int,
+                        default=1500000, type=int,
                         help='# SGD updates/iterations to train for')
     parser.add_argument('-max_steps', '--MAX_STEPS', action="store",
-                        default=20000, type=int,
+                        default=2000000, type=int,
                         help='Max # of steps before episode terminated')
     parser.add_argument('-v', '--VERBOSE', action="store_true", default=False,
                         help='Get training progress printed out')

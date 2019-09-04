@@ -16,7 +16,7 @@ def command_line_towers():
                         default=100, type=int,
                         help='Rollout test performance after # batch updates.')
     parser.add_argument('-print', '--PRINT_EVERY', action="store",
-                        default=10000, type=int,
+                        default=2500, type=int,
                         help='#Episodes after which to print.')
     parser.add_argument('-n_runs', '--RUN_TIMES', action="store",
                         default=1, type=int,
@@ -71,11 +71,6 @@ def learning_params(l_type, NUM_DISKS=4, ONLINE=False):
                   "LAMBDA": 0.,  # TD(lambda) exponential decay factor
                   "EPSILON": 0.1 # Exploration parameter
                   }
-
-        if num_disks == 4:
-            params[ "init_q_eps"] = 10
-            params["inter_update_eps"] =  25
-            params["num_grammar_updates"] = 12
 
     if NUM_DISKS == 4:
         params["NUM_UPDATES"] = 11000
@@ -243,7 +238,7 @@ action_to_letter = {0: "a", 1: "b", 2: "c",
 
 
 def rollout_episode(agent, MAX_STEPS, N_DISKS, GAMMA,
-                    record_macros=False, grammar=False):
+                    record_macros=False):
 
     env = gym.make("Hanoi-v0")
     env.set_env_parameters(N_DISKS, env_noise=0, verbose=False)

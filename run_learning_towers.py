@@ -13,6 +13,8 @@ from utils.q_helpers_towers import q_learning
 from utils.smdp_helpers_towers import smdp_q_learning, smdp_q_online_learning
 from utils.general_towers import get_optimal_macros, command_line_towers, DotDic, learning_params
 
+SEQ_DIR = "grammars/sequitur/"
+LEXIS_DIR = "grammars/Lexis/"
 
 def run_learning(args):
     LEARN_TYPE = args.LEARN_TYPE
@@ -35,6 +37,14 @@ def run_learning(args):
     EPSILON = params.EPSILON
     NUM_UPDATES = params.NUM_UPDATES
     MAX_STEPS = params.MAX_STEPS
+
+    GRAMMAR_TYPE = args.GRAMMAR_TYPE
+    if GRAMMAR_TYPE == "2-Sequitur" or GRAMMAR_TYPE == "3-Sequitur":
+        GRAMMAR_DIR = SEQ_DIR
+        g_type = "sequitur"
+    elif GRAMMAR_TYPE == "G-Lexis":
+        GRAMMAR_DIR = LEXIS_DIR
+        g_type = "lexis"
 
     env = gym.make("Hanoi-v0")
     env.set_env_parameters(N_DISKS, env_noise=0, verbose=False)
@@ -62,7 +72,9 @@ def run_learning(args):
         np.random.seed(t)
         start_t = time.time()
         # Reset values to 0 initialization without having to recompute mov_map
-        agent.reset_values()
+        if LEARN_TYPE != "Online-SMDP-Q-Learning":
+            agent.reset_values()
+
         if LEARN_TYPE == "Q-Learning":
             df_temp = q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                                  GAMMA, ALPHA, LAMBDA, EPSILON,
@@ -79,7 +91,7 @@ def run_learning(args):
             df_temp = smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
                                              GAMMA, ALPHA, LAMBDA, EPSILON,
                                              ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME,
-                                             PRINT_EVERY, VERBOSE,
+                                             PRINT_EVERY, VERBOSE, GRAMMAR_DIR, g_type,
                                              seq_k_schedule, seq_update_schedule)
 
         df_across_runs.append(df_temp)
@@ -105,4 +117,4 @@ if __name__ == "__main__":
     args = command_line_towers()
     run_learning(args)
 
-    python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 1 --GRAMMAR_TYPE 3-Sequitur --VERBOSE
+    # python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 1 --GRAMMAR_TYPE 3-Sequitur --VERBOSE

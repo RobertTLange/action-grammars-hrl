@@ -41,6 +41,7 @@ def init_agent(model, L_RATE, USE_CUDA, NUM_ACTIONS=4,
 
     # Initialize optimizer object - single agent
     optimizers = optim.Adam(params=agents["current"].parameters(), lr=L_RATE)
+    # optimizers = optim.RMSprop(params=agents["current"].parameters(), lr=L_RATE, momentum=0.95)
     return agents, optimizers
 
 
