@@ -46,7 +46,7 @@ def command_line_towers():
     return parser.parse_args()
 
 
-def learning_params(l_type, NUM_DISKS=4):
+def learning_params(l_type, NUM_DISKS=4, ONLINE=False):
     if l_type == "Q-Learning":
         params = {"ALPHA": 0.8,  # Learning rate
                   "GAMMA": 0.95,  # Discount factor
@@ -86,6 +86,15 @@ def learning_params(l_type, NUM_DISKS=4):
     elif NUM_DISKS == 6:
         params["NUM_UPDATES"] = 7000000
         params["MAX_STEPS"] = 5000
+
+    if ONLINE:
+        if NUM_DISKS == 5:
+            schedule_its = np.linspace(5000, 170000, 12)
+            schedule_k = [7, 6, 5, 4, 3, 2, 2, 2, 2, 2, 2, 2]
+        elif NUM_DISKS == 6:
+            schedule_its = np.linspace(5000, 600000, 15)
+            schedule_k = [7, 7, 6, 6, 5, 5, 4, 4, 3, 3, 2, 2, 2, 2, 2]
+        return schedule_k, schedule_its
     return params
 
 

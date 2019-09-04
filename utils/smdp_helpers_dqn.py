@@ -6,7 +6,7 @@ import argparse
 import torch
 from agents.dqn import MLP_DQN, MLP_DDQN, init_agent
 from utils.general_dqn import command_line_dqn_grid, ReplayBuffer
-from utils.cfg_grammar_dqn import get_macros
+from grammars.cfg_grammar import get_macros
 
 
 def command_line_grammar_dqn(dqn_parser):
@@ -129,7 +129,6 @@ def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
     SENTENCE = "".join(SENTENCE)
     # Collect actions from rollout into string & call sequitur
     macros, counts = get_macros(NUM_MACROS, SENTENCE, 4, GRAMMAR_DIR, k=k, g_type=g_type)
-    print(macros)
     return macros, counts
 
 

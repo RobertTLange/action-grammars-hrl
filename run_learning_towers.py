@@ -51,7 +51,10 @@ def run_learning(args):
         macros = get_optimal_macros(env, N_DISKS - TRANSFER_DISTANCE,
                                     GRAMMAR_TYPE)
         agent = SMDP_Agent_Q(env, macros)
-
+    elif LEARN_TYPE == "Online-SMDP-Q-Learning":
+        # Get Grammar Update Hyperparameter Schedule
+        seq_k_schedule, seq_update_schedule = learning_params(LEARN_TYPE, N_DISKS,
+                                                              ONLINE=True)
 
     print("START RUNNING {} AGENT LEARNING FOR {} TIMES".format(LEARN_TYPE,
                                                                 args.RUN_TIMES))
@@ -67,18 +70,17 @@ def run_learning(args):
                                  PRINT_EVERY, VERBOSE)
 
         elif LEARN_TYPE == "Imitation-SMDP-Q-Learning" or LEARN_TYPE == "Transfer-SMDP-Q-Learning":
-            print(VERBOSE, NUM_UPDATES, MAX_STEPS, ROLLOUT_EVERY, PRINT_EVERY)
             df_temp = smdp_q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                                       GAMMA, ALPHA, LAMBDA, EPSILON,
                                       ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME,
                                       PRINT_EVERY, VERBOSE)
 
         elif LEARN_TYPE == "Online-SMDP-Q-Learning":
-            df_temp = smdp_q_online_learning(env, **params,
-                                             max_steps=max_steps,
-                                             log_freq=log_freq,
-                                             log_episodes=log_episodes,
-                                             verbose=False)
+            df_temp = smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
+                                             GAMMA, ALPHA, LAMBDA, EPSILON,
+                                             ROLLOUT_EVERY, NUM_ROLLOUTS, STATS_FNAME,
+                                             PRINT_EVERY, VERBOSE,
+                                             seq_k_schedule, seq_update_schedule)
 
         df_across_runs.append(df_temp)
         total_t = time.time() - start_t
@@ -102,3 +104,5 @@ def run_learning(args):
 if __name__ == "__main__":
     args = command_line_towers()
     run_learning(args)
+
+    python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 1 --GRAMMAR_TYPE 3-Sequitur --VERBOSE

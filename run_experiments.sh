@@ -41,13 +41,18 @@ then
 elif [[ "$*" == "toh-fig6-right" ]]
 then
     echo "Run Towers of Hanoi Tabular Experiments (figure 6 right plot)"
-    # RUNNING: 6 DISK ENVIRONMENT 3 Sequitur and G-Lexis
+    # ✓ 6 DISK ENVIRONMENT 3 Sequitur and G-Lexis
     python run_learning_towers.py --N_DISKS 6 --LEARN_TYPE Imitation-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE 3-Sequitur --SAVE_FNAME 3_seq_TOH.csv
     python run_learning_towers.py --N_DISKS 6 --LEARN_TYPE Imitation-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE G-Lexis --SAVE_FNAME g_lexis_TOH.csv
 elif [[ "$*" == "toh-online" ]]
 then
     # TODO: ONLINE GRAMMAR EXPERIMENTS 5+6 Disk Environment Schedule k?!
     echo "Run ToH Tabular Online Grammar Experiments (figure 8 r1 left+middle)"
+    python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE 3-Sequitur --SAVE_FNAME seq_TOH.csv
+    python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE G-Lexis --SAVE_FNAME g_lexis_TOH.csv
+
+    python run_learning_towers.py --N_DISKS 6 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE 3-Sequitur --SAVE_FNAME seq_TOH.csv
+    python run_learning_towers.py --N_DISKS 6 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE G-Lexis --SAVE_FNAME g_lexis_TOH.csv
 ################################################################################
 # RUN GRIDWORLD DQN EXPERIMENTS
 ################################################################################
@@ -65,7 +70,7 @@ then
 elif [[ "$*" == "grid-fig7-middle" ]]
 then
     echo "Run Grid Transfer Grammar-DQN Experiments (fig 7 middle)"
-    # TORUN: TRANSFER GRAMMAR SIMULATIONS (DQN AGENT AFTER 250/500K ITS)
+    # RUNNING: TRANSFER GRAMMAR SIMULATIONS (DQN AGENT AFTER 250/500K ITS)
     python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/250000_mlp_agent.pt --SAVE_FNAME grid_transfer_250k.csv --VERBOSE
     python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/500000_mlp_agent.pt --SAVE_FNAME grid_transfer_500k.csv
     python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --NUM_MACROS 4 --LOAD_CKPT agents/trained/1000000_mlp_agent.pt --SAVE_FNAME grid_expert_1M_4Macros.csv
