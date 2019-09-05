@@ -248,7 +248,7 @@ def rollout_episode(agent, MAX_STEPS, N_DISKS, GAMMA,
     reward_temp = []
     steps = 0
 
-    for s in range(MAX_STEPS):
+    while steps < MAX_STEPS:
         action = agent.epsilon_greedy_action(cur_state, 0.05)
         if action > 5:
             next_state, reward, done, _ = macro_step(action, cur_state, agent,

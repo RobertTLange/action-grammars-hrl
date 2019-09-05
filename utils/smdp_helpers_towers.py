@@ -72,16 +72,19 @@ def smdp_q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
         old_state = None
 
         ep_id += 1
+        step_counter = 0
 
-        for i in range(MAX_STEPS):
+        while step_counter < MAX_STEPS:
             action = agent.epsilon_greedy_action(state, EPSILON)
             if action > 5:
                 next_state, reward, done, _ = macro_step(action, state, agent,
                                                          env, er_buffer,
                                                          ep_id)
+                steps = agent.macros[action - 6].macro_len
             else:
                 next_state, reward, done, _ = env.step(action)
                 er_buffer.push(ep_id, state, action, reward, next_state, done, None)
+                steps = 1
 
             if type(reward) != list:
                 reward = [reward]
@@ -95,7 +98,7 @@ def smdp_q_learning(agent, N_DISKS, NUM_UPDATES, MAX_STEPS,
                                                       old_greedy_choice, old_action,
                                                       old_state)
             update_counter += 1
-
+            step_counter += steps
             # Update variables
             old_state = state
             old_action = action
