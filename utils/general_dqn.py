@@ -19,7 +19,7 @@ def command_line_dqn_grid(parent=False):
     parser = argparse.ArgumentParser(add_help=False)
     # General logging/saving and device arguments
     parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",
-                        default=1000, type=int,
+                        default=500, type=int,
                         help='Rollout test performance after # batch updates.')
     parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",
                         default=5, type=int,
@@ -28,7 +28,7 @@ def command_line_dqn_grid(parent=False):
                         default=5, type=int,
                         help='# Times to run agent learning')
     parser.add_argument('-n_upd', '--NUM_UPDATES', action="store",
-                        default=500000, type=int,
+                        default=100000, type=int,
                         help='# SGD updates/iterations to train for')
     parser.add_argument('-max_steps', '--MAX_STEPS', action="store",
                         default=200, type=int,

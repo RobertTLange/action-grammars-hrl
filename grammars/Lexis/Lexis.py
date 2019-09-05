@@ -47,7 +47,7 @@ class DAG(object):
     #Initializes (an unoptimized) DAG from inputFile. charSeq tells if inputFile is a char sequence, int sequence or space-separated sequence
     def __initFromStrings(self, inputFile, chFlag = SequenceType.Character, noNewLineFlag = True):
         (self.__preprocessedInput, self.__dic) = self.__preprocessInput(inputFile, charSeq = chFlag, noNewLineFlag = noNewLineFlag)
-        allLetters = set(list(map(int,self.__preprocessedInput.split())))
+        allLetters = set(map(int,self.__preprocessedInput.split()))
         #Setting odd and even values for __nextNewInt and __nextNewContextInt
         self.__nextNewInt = max(allLetters)+1
         if self.__nextNewInt % 2 == 0:
@@ -55,9 +55,9 @@ class DAG(object):
         #Initializing the concatenated DAG
         for line in self.__preprocessedInput.split('\n'):
             line = line.rstrip('\n')
-            self.__concatenatedDAG.extend(list(map(int,line.split())))
+            self.__concatenatedDAG.extend(map(int,line.split()))
             self.__concatenatedDAG.append(self.__nextNewInt)
-            self.__concatenatedNTs.extend(0 for j in range(len(list(map(int,line.split())))))
+            self.__concatenatedNTs.extend(0 for j in range(len(map(int,line.split()))))
             self.__concatenatedNTs.append(self.__nextNewInt)
             self.__separatorInts.add(self.__nextNewInt)
             self.__separatorIntsIndices.add(len(self.__concatenatedDAG)-1)
@@ -90,7 +90,72 @@ class DAG(object):
             self.__concatenatedNTs[i] = self.__nextNewInt
             self.__separatorInts.add(self.__nextNewInt)
             self.__nextNewInt += 1
-
+        # wordDict = {}
+        # counterDict = {}
+        # counter = 0
+        # textFile = inputFile.read().splitlines()
+        # tmpnode = []
+        # for line in textFile:
+        #     # if len(line.split(' ->  ')) < 2:
+        #     #     tmpnode = ['\n'] + line.split(' ')
+        #     #     newnode = []
+        #     #     for w in tmpnode:
+        #     #         if w not in counterDict:
+        #     #             wordDict[counter] = w
+        #     #             counterDict[w] = counter
+        #     #             counter += 1
+        #     #         newnode.append(counterDict[w])
+        #     #     self.__DAG[newNt] += newnode
+        #     #     continue
+        #     # else:
+        #     nt = int(line.split(' ->  ')[0][1:])
+        #     if counter % 2 == 0:
+        #         if counter != 0:
+        #             counter += 1
+        #     if nt not in counterDict:
+        #         wordDict[counter] = nt
+        #         counterDict[nt] = counter
+        #         counter += 1
+        #     newNt = counterDict[nt]
+        #     node = line.split(' ->  ')[1].split(' ')
+        #     newnode = []
+        #     for w in node:
+        #         if w[0] == 'N':
+        #             if w not in counterDict:
+        #                 wordDict[counter] = w[1:]
+        #                 counterDict[w[1:]] = counter
+        #                 counter += 1
+        #             newnode.append(counterDict[w[1:]])
+        #         else:
+        #             if w not in counterDict:
+        #                 wordDict[counter] = w
+        #                 counterDict[w] = counter
+        #                 counter += 1
+        #             newnode.append(counterDict[w])
+        #     if newNt == 0:
+        #         if newNt in self.__DAG:
+        #             self.__DAG[newNt].append(newnode)
+        #         else:
+        #             self.__DAG[newNt] = [newnode]
+        #     else:
+        #         self.__DAG[newNt] = newnode
+        # self.__dic = wordDict
+        # self.__nextNewInt = counter
+        # if self.__nextNewInt % 2 == 0:
+        #     self.__nextNewContextInt = self.__nextNewInt
+        #     self.__nextNewInt += 1
+        # else:
+        #     self.__nextNewContextInt = self.__nextNewInt + 1
+        # for nt in self.__DAG:
+        #     self.__concatenatedDAG.extend(self.__DAG[nt])
+        #     self.__concatenatedDAG.append(self.__nextNewInt)
+        #     self.__concatenatedNTs.extend(nt for j in range(len(self.__DAG[nt])))
+        #     self.__concatenatedNTs.append(self.__nextNewInt)
+        #     self.__separatorInts.add(self.__nextNewInt)
+        #     self.__separatorIntsIndices.add(len(self.__concatenatedDAG)-1)
+        #     self.__nextNewInt += 2
+        # print self.__DAG
+        # print self.__dic
         self.__createAdjacencyList()
         # print 'self dag'
         # print self.__DAG
@@ -132,8 +197,9 @@ class DAG(object):
             return len(self.__concatenatedDAG)-2*len(self.__separatorInts)
         if costFunction == CostFunction.EdgeCost:
             return len(self.__concatenatedDAG)-len(self.__separatorInts)
+
     #Replaces a repeat's occurrences with a new symbol and creates a new node in the DAG
-    def __replaceRepeat(self, repeatLength, repeatOccs):
+    def __replaceRepeat(self,(repeatLength, (repeatOccs))):
         repeat = self.__concatenatedDAG[repeatOccs[0]:repeatOccs[0]+repeatLength]
         newTmpConcatenatedDAG = []
         newTmpConcatenatedNTs = []
@@ -166,7 +232,7 @@ class DAG(object):
         candidateRepeats = []
         for r in repeats: #Extracting maximum repeat
             repeatStats = r.split()
-            repeatOccs = self.__extractNonoverlappingRepeatOccurrences(int(repeatStats[0]),list(map(int,repeatStats[2][1:-1].split(','))))
+            repeatOccs = self.__extractNonoverlappingRepeatOccurrences(int(repeatStats[0]),map(int,repeatStats[2][1:-1].split(',')))
             if maxRepeatGain < self.__repeatGain(int(repeatStats[0]), len(repeatOccs), costFunction):
                 maxRepeatGain = self.__repeatGain(int(repeatStats[0]), len(repeatOccs), costFunction)
                 candidateRepeats = [(int(repeatStats[0]),len(repeatOccs),repeatOccs)]
@@ -191,11 +257,11 @@ class DAG(object):
     #Output is a string, each line containing: "RepeatLength    NumberOfOccurrence  (CommaSeparatedOccurrenceIndices)"
     def __extractRepeats(self, repeatClass):
         process = subprocess.Popen(["./repeats1/repeats11", "-i", "-r"+repeatClass, "-n2", "-psol"],stdout=subprocess.PIPE, stdin=subprocess.PIPE, stderr=subprocess.STDOUT)
-        #process.stdin.write(' '.join(list(map(str, self.__concatenatedDAG))))
+        process.stdin.write(' '.join(map(str,self.__concatenatedDAG)))
         text_file = ''
         while process.poll() is None:
             output = process.communicate()[0].rstrip()
-            text_file += str(output)
+            text_file += output
         process.wait()
         repeats=[]
         firstLine = False
@@ -440,7 +506,11 @@ class DAG(object):
         self.__logMessage('DAGCost(Concats): ' + str(self.DAGCost(CostFunction.ConcatenationCost)))
         self.__logMessage('DAGCost(Edges):' + str(self.DAGCost(CostFunction.EdgeCost)))
         DAG = self.__concatenatedDAG
+        # print 'dag'
+        # print DAG
         NTs = self.__concatenatedNTs
+        # print 'nts'
+        # print NTs
         separatorInts = self.__separatorInts
         Dic = self.__dic
         nodes = {}
@@ -462,7 +532,7 @@ class DAG(object):
                         try:
                             nodes[ntDic[NTs[i]]] = str(nodes[ntDic[NTs[i]]]) + ' ' + str(Dic[DAG[i]])
                         except:
-                            print(DAG[i], NTs[i])
+                            print DAG[i], NTs[i]
                             raise
                     else:
                         nodes[ntDic[NTs[i]]] = str(nodes[ntDic[NTs[i]]]) + ' ' + str(DAG[i])
@@ -473,7 +543,7 @@ class DAG(object):
                     try:
                         nodes[ntDic[NTs[i]]] = str(nodes[ntDic[NTs[i]]]) + ' ' + str(ntDic[DAG[i]])
                     except:
-                        print(DAG[i], NTs[i])
+                        print DAG[i], NTs[i]
                         raise
                 else:
                     nodes[ntDic[NTs[i]]] = str(nodes[ntDic[NTs[i]]]) + ' ' + str(ntDic[DAG[i]])
@@ -483,11 +553,11 @@ class DAG(object):
             if intDAGPrint:
                 subnodes = nodes[ntDic[nt]].rstrip(' ||').split(' ||')
                 for s in subnodes:
-                    print(ntDic[nt] + ' ->' + s)
+                    print ntDic[nt] + ' ->' + s
             else:
                 subnodes = nodes[ntDic[nt]].rstrip(' ||').split(' ||')
                 for s in subnodes:
-                    print(ntDic[nt] + ' -> ' + s)
+                    print ntDic[nt] + ' -> ' + s
             nodeCounter += 1
     # Log via flags
     def __logViaFlag(self, flag):

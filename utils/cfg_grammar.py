@@ -50,7 +50,7 @@ class run_grammar():
         random_n = str(np.random.randint(1, 100000000))
         path_input =  "input_" + time.strftime("%Y%m%d-%H%M%S-") + random_n + ".txt"
         os.system('echo ' + self.string + ' >> ' + path_input)
-        command = 'python Lexis.py -m -t c -f e ' + path_input + ' >> ' + self.path_output
+        command = 'python2 Lexis.py -m -t c -f e ' + path_input + ' >> ' + self.path_output
         try:
             os.system(command)
 
@@ -128,6 +128,8 @@ class run_grammar():
             except:
                 pass
 
+        print(nonterminals)
+        print(productions)
         rename_list = range(1, len(nonterminals))
         rename_dict = dict(zip(nonterminals, rename_list))
 
@@ -188,8 +190,6 @@ class run_grammar():
         self.lengths = lengths
         self.length_ratio = float(lengths[1])/lengths[0]
 
-        logging.info("Successfully computed compression statistics")
-
         def shannon_entropy(string):
             prob = [float(string.count(c))/len(string) for c in dict.fromkeys(string)]
             entropy = - sum([p * math.log(p) / math.log(2.0) for p in prob])
@@ -204,7 +204,8 @@ class run_grammar():
             print("Pre-Compression Shannon Entropy:", shannon_pre)
             print("Post-Compression Shannon Entropy:", shannon_post)
 
-        return comp_ratio, shannon_pre, shannon_post
+        stats = [comp_ratio, shannon_pre, shannon_post]
+        return stats
 
 
 def get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, GRAMMAR_DIR, k=2, g_type="sequitur"):
@@ -220,6 +221,8 @@ def get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, GRAMMAR_DIR, k=2, g_type="s
     elif g_type == "lexis":
         Grammar.run_lexis()
         Grammar.clean_lexis()
+
+    stats = Grammar.get_compression_stats()
 
     temp_S = Grammar.S.split("-")
     occ = dict(Counter(temp_S))
@@ -243,4 +246,4 @@ def get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, GRAMMAR_DIR, k=2, g_type="s
         macros = Grammar.flat_productions[1:]
 
     os.chdir(original_dir)
-    return macros, counts
+    return macros, counts, stats

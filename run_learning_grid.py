@@ -215,7 +215,7 @@ def run_smdp_dqn_learning(args):
     elif AGENT == "CNN-Dueling-DQN":
         agents, optimizer = init_agent(CNN_DDQN, L_RATE, USE_CUDA, NUM_ACTIONS)
 
-    replay_buffer = ReplayBuffer(capacity=5000)
+    replay_buffer = ReplayBuffer(capacity=args.CAPACITY)
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
                                          "rew_median", "rew_10th_p", "rew_90th_p"])
 
@@ -379,8 +379,8 @@ def run_online_dqn_smdp_learning(args):
     elif AGENT == "CNN-Dueling-DQN":
         agents, optimizer = init_agent(CNN_DDQN, L_RATE, USE_CUDA, NUM_ACTIONS)
 
-    replay_buffer = ReplayBuffer(capacity=5000)
-    macro_buffer = MacroBuffer(capacity=1000)
+    replay_buffer = ReplayBuffer(capacity=args.CAPACITY)
+    macro_buffer = MacroBuffer(capacity=args.CAPACITY)
 
     reward_stats = pd.DataFrame(columns=["opt_counter", "rew_mean", "rew_sd",
                                          "rew_median", "rew_10th_p", "rew_90th_p"])

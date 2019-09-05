@@ -16,18 +16,20 @@ def q_learning_update(GAMMA, L_RATE, LAMBDA, q_func, eligibility,
     else:
         target = reward + GAMMA * np.max(q_func(next_state))
 
-    if stp > 0:
+    if stp > 0 and eligibility is not None:
         if old_greedy_choice == action:
             eligibility(old_state)[old_action] *= GAMMA*LAMBDA
         else:
             eligibility(old_state)[old_action] = 0
 
-    eligibility(cur_state)[action] += 1
-
-    td_err = target - q_func(cur_state)[action]
-    Q_new = q_func.table + L_RATE * td_err * eligibility.table
-
-    q_func.update_all(Q_new)
+    if eligibility is not None:
+        eligibility(cur_state)[action] += 1
+        Q_new = q_func.table + L_RATE * td_err * eligibility.table
+        q_func.update_all(Q_new)
+    else:
+        td_err = target - q_func(cur_state)[action]
+        q_updated = q_func(cur_state)[action] + L_RATE * td_err
+        q_func.update_table(cur_state, q_updated, action)
     return eligibility, td_err
 
 
