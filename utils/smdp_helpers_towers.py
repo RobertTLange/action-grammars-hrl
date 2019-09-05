@@ -224,13 +224,11 @@ def smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
     NUM_MACROS = 5
     macros, counts = get_macros(NUM_MACROS, SENTENCE, 6, GRAMMAR_DIR,
                                 k=seq_k_schedule[0], g_type=g_type)
-
+    print(macros)
     agent = endorse_agent(env, agent, macros, value_buffer)
-
-
+    grammar_counter += 1
     # Run SMDP-Loop with Inferred Grammar Macros
     while update_counter < NUM_UPDATES:
-
         state = env.reset()
         eligibility = QTable(np.zeros(N_DISKS*(3, ) + (6 + len(agent.macros),)))
 
@@ -241,6 +239,25 @@ def smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
         ep_id += 1
 
         for i in range(MAX_STEPS):
+            # CHECK AND PERFORM GRAMMAR UPDATE!
+            if update_counter == seq_update_schedule[grammar_counter]:
+                # Rollout Episode with agent and infer macros
+                _, _, buffer_to_infer = rollout_episode(agent, MAX_STEPS, N_DISKS, GAMMA,
+                                                        record_macros=True)
+
+                SENTENCE = []
+                for step in range(len(buffer_to_infer)):
+                    SENTENCE.append(action_to_letter(buffer_to_infer[step][2]))
+
+                SENTENCE = "".join(SENTENCE)
+
+                MAX_NUM_MACROS = 5
+                macros, counts = get_macros(NUM_MACROS, SENTENCE, 6, GRAMMAR_DIR,
+                                            k=seq_k_schedule[grammar_counter], g_type=g_type)
+                print(macros)
+                agent = endorse_agent(env, agent, macros, value_buffer)
+                grammar_counter += 1
+
             action = agent.epsilon_greedy_action(state, EPSILON)
             if action > 5:
                 next_state, reward, done, _ = macro_step(action, state, agent,
@@ -311,7 +328,7 @@ class TransferValueBuffer():
     def store_macro_values(self, agent_old):
         if self.macros_active is not None:
             for i, macro in enumerate(self.macros_active):
-                self.macro_values[macro] = agent_old.qfunc.table[..., num_primitives+i]
+                self.macro_values[macro] = agent_old.q_func.table[..., self.num_primitives+i]
 
     def transfer_values(self, macros_to_transfer):
         # Initialize an agent for the new set of macros

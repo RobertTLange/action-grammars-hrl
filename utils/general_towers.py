@@ -242,7 +242,7 @@ def rollout_episode(agent, MAX_STEPS, N_DISKS, GAMMA,
 
     env = gym.make("Hanoi-v0")
     env.set_env_parameters(N_DISKS, env_noise=0, verbose=False)
-    er_buffer_temp = ReplayBuffer(MAX_STEPS, record_macros)
+    er_buffer = ReplayBuffer(MAX_STEPS, record_macros)
 
     cur_state = env.reset()
     reward_temp = []
@@ -251,17 +251,14 @@ def rollout_episode(agent, MAX_STEPS, N_DISKS, GAMMA,
     while steps < MAX_STEPS:
         action = agent.epsilon_greedy_action(cur_state, 0.05)
         if action > 5:
-            next_state, reward, done, _ = macro_step(action, cur_state, agent,
-                                                     env, None, 0)
+            next_state, reward, done, er_buffer = macro_step(action, cur_state, agent,
+                                                             env, er_buffer, 0)
         else:
             next_state, reward, done, _ = env.step(action)
+            er_buffer.push(0, cur_state, action, reward, next_state, done)
 
         if type(reward) != list:
             reward = [reward]
-
-        er_buffer_temp.push(0, cur_state, action,
-                            discounted_return(reward, GAMMA),
-                            next_state, done)
 
         reward_temp.extend(reward)
         cur_state = next_state
@@ -270,7 +267,7 @@ def rollout_episode(agent, MAX_STEPS, N_DISKS, GAMMA,
             break
 
     episode_rew = discounted_return(reward_temp, GAMMA)
-    return steps, episode_rew, er_buffer_temp.buffer
+    return steps, episode_rew, er_buffer.buffer
 
 
 def macro_step(action, state, agent, env, er_buffer, ep_id):
@@ -298,4 +295,4 @@ def macro_step(action, state, agent, env, er_buffer, ep_id):
             _ = None
             break
 
-    return next_state, rewards, done, _
+    return next_state, rewards, done, er_buffer
