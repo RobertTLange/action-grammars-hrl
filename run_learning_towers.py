@@ -55,11 +55,10 @@ def run_learning(args):
     if LEARN_TYPE == "Q-Learning":
         agent = Agent_Q(env)
     elif LEARN_TYPE == "Imitation-SMDP-Q-Learning":
-        macros = get_optimal_macros(env, N_DISKS, GRAMMAR_TYPE)
+        macros = get_optimal_macros(N_DISKS, GRAMMAR_TYPE)
         agent = SMDP_Agent_Q(env, macros)
     elif LEARN_TYPE == "Transfer-SMDP-Q-Learning":
-        macros = get_optimal_macros(env, N_DISKS - TRANSFER_DISTANCE,
-                                    GRAMMAR_TYPE)
+        macros = get_optimal_macros(N_DISKS - TRANSFER_DISTANCE, GRAMMAR_TYPE)
         agent = SMDP_Agent_Q(env, macros)
     elif LEARN_TYPE == "Online-SMDP-Q-Learning":
         # Get Grammar Update Hyperparameter Schedule

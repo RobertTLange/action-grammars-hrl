@@ -160,7 +160,7 @@ def discounted_return(rewards, gamma):
 
 
 # Dictionary of optimal Sequitur extracted macro-actions
-def get_optimal_macros(env, N, cfg_type):
+def get_optimal_macros(N, cfg_type):
     seq2_macros = {4: ["abd"],
                    5: ["bafbcd", "baf", "ec", "bc"],
                    6: ["abdaef", "abdced", "abdaef", "aedce",
@@ -182,19 +182,19 @@ def get_optimal_macros(env, N, cfg_type):
                         'bafbcdb', 'fecfbafecdbcfec']}
 
     if cfg_type == "2-Sequitur":
-        macros = get_macros_from_productions(env, seq2_macros[N])
+        macros = get_macros_from_productions(seq2_macros[N])
         return macros
     elif cfg_type == "3-Sequitur":
-        macros = get_macros_from_productions(env, seq3_macros[N])
+        macros = get_macros_from_productions(seq3_macros[N])
         return macros
     elif cfg_type == "G-Lexis":
-        macros = get_macros_from_productions(env, lexis_macros[N])
+        macros = get_macros_from_productions(lexis_macros[N])
         return macros
     else:
         raise ValueError("Provide a valid Context-Free Grammar")
 
 
-def get_macros_from_productions(env, productions):
+def get_macros_from_productions(productions):
     macros = []
     for i in range(len(productions)):
         macros.append(Macro(productions[i]))

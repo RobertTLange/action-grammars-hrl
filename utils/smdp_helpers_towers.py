@@ -13,6 +13,7 @@ from utils.general_towers import discounted_return, get_logging_stats
 from utils.general_towers import learning_params, ReplayBuffer, rollout_episode
 from utils.general_towers import macro_step, get_macros_from_productions
 from utils.q_helpers_towers import q_learning_update
+from agents.smdp_q_agent import SMDP_Agent_Q
 
 
 def smdp_q_learning_update(GAMMA, ALPHA, LAMBDA, q_func, eligibility,
@@ -142,9 +143,6 @@ def smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
     step_stats = pd.DataFrame(columns=["opt_counter", "steps_mean", "steps_sd",
                                        "steps_median", "steps_10th_p", "steps_90th_p"])
 
-    # Init Replay Buffer
-    er_buffer = ReplayBuffer(NUM_UPDATES*MAX_STEPS, record_macros=True)
-
     update_counter = 0
     ep_id = 0
 
@@ -152,6 +150,11 @@ def smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
     grammar_counter = 0
     env = gym.make("Hanoi-v0")
     env.set_env_parameters(N_DISKS, env_noise=0, verbose=False)
+
+    # Init Replay Buffer
+    er_buffer = ReplayBuffer(NUM_UPDATES*MAX_STEPS, record_macros=True)
+    # Init Value Transfer Buffer
+    value_buffer = TransferValueBuffer(env)
 
     # Run initial Q-Learning before first macro acquisition
     agent = Agent_Q(env)
@@ -219,7 +222,7 @@ def smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
     macros, counts = get_macros(NUM_MACROS, SENTENCE, 6, GRAMMAR_DIR,
                                 k=seq_k_schedule[0], g_type=g_type)
 
-    agent = endorse_agent(agent, macros)
+    agent = endorse_agent(env, agent, macros, value_buffer)
 
 
     # Run SMDP-Loop with Inferred Grammar Macros
@@ -291,16 +294,44 @@ def smdp_q_online_learning(N_DISKS, NUM_UPDATES, MAX_STEPS,
 
 
 class TransferValueBuffer():
-    def __init__(self):
-        self.macros = []
-        self.macros_active = []
+    def __init__(self, env):
+        self.primitive_values = None
+        self.macro_values = {}
+        self.env = env
+        self.num_primitives = 6
+        self.macros_active = None
 
-    def transfer_values(agent, macros_to_transfer):
+    def store_primitive_values(self, agent_old):
+        self.primitive_values = agent_old.q_func.table[..., :self.num_primitives]
         return
 
+    def store_macro_values(self, agent_old):
+        if self.macros_active is not None:
+            for i, macro in enumerate(self.macros_active):
+                self.macro_values[macro] = agent_old.qfunc.table[..., num_primitives+i]
 
-def endorse_agent(agent, macros, value_buffer):
-    # Function takes trained agent and a set of macros and transfers value estimates
-    return agent
+    def transfer_values(self, macros_to_transfer):
+        # Initialize an agent for the new set of macros
+        macros_to_transfer_temp = get_macros_from_productions(macros_to_transfer)
+        agent = SMDP_Agent_Q(self.env, macros_to_transfer_temp)
+        # Perform the value transfer for primitive values
+        agent.q_func.table[..., :self.num_primitives] = self.primitive_values
+        # Perform the value transfer for macro values
+        for i, macro in enumerate(macros_to_transfer):
+            if macro in self.macro_values.keys():
+                agent.q_func.table[..., self.num_primitives+i] = self.macro_values[macro]
+        # Update currently active set of macro actions
+        self.macros_active = macros_to_transfer
+        return agent
+
+
+def endorse_agent(env, agent_old, macros_to_transfer, value_buffer):
+    # Store the primitive action values in the value buffer - later transfer
+    value_buffer.store_primitive_values(agent_old)
+    # Store the current macro values in the value buffer - become inactive
+    value_buffer.store_macro_values(agent_old)
+    # Transfer the values over to the new agent
+    transfer_agent = value_buffer.transfer_values(macros_to_transfer)
+    return transfer_agent
 
 # python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning --RUN_TIMES 1 --GRAMMAR_TYPE 2-Sequitur --SAVE_FNAME seq_TOH.csv --VERBOSE

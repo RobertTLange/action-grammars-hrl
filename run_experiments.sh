@@ -59,7 +59,7 @@ then
 elif [[ "$*" == "grid-experts" ]]
 then
     echo "Train Grid Experts 250k, 500k, 1M"
-    python run_learning_grid.py --RUN_TIMES 1 --SAVE --VERBOSE
+    python run_learning_grid.py --RUN_TIMES 1 --SAVE --VERBOSE --NUM_UPDATES 1000000
 elif [[ "$*" == "grid-fig7-left" ]]
 then
     echo "Run Grid Expert Grammar-DQN Experiments (fig 7 left)"
