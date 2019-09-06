@@ -11,7 +11,9 @@ from utils.smdp_helpers_dqn import command_line_grammar_dqn
 # Environment Wrapper!
 from utils.atari_wrapper import make_atari, wrap_deepmind, wrap_pytorch
 # Learning Algorithms
-from run_learning_grid import run_dqn_learning
+from run_learning_grid import run_dqn_learning, run_smdp_dqn_learning, run_online_dqn_smdp_learning
+from utils.general_dqn import run_multiple_times
+
 
 env_ids = ["PongNoFrameskip-v4", #6 actions
            "SeaquestNoFrameskip-v4", #18 actions
@@ -21,7 +23,7 @@ def command_line_dqn_atari(parent=False):
     parser = argparse.ArgumentParser(add_help=False)
     # General logging/saving and device arguments
     parser.add_argument('-roll_upd', '--ROLLOUT_EVERY', action="store",
-                        default=50000, type=int,
+                        default=5000, type=int,
                         help='Rollout test performance after # batch updates.')
     parser.add_argument('-n_roll', '--NUM_ROLLOUTS', action="store",
                         default=5, type=int,
@@ -30,7 +32,7 @@ def command_line_dqn_atari(parent=False):
                         default=5, type=int,
                         help='# Times to run agent learning')
     parser.add_argument('-n_upd', '--NUM_UPDATES', action="store",
-                        default=1500000, type=int,
+                        default=500000, type=int,
                         help='# SGD updates/iterations to train for')
     parser.add_argument('-max_steps', '--MAX_STEPS', action="store",
                         default=2000000, type=int,

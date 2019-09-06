@@ -86,7 +86,12 @@ elif [[ "$*" == "pong-atari-expert" ]]
 then
     echo "Run Pong ATARI Expert Grammar-DQN Experiments (fig 7 right)"
     # BASELINE SIMULATIONS
-    python run_learning_atari.py --ENV_ID PongNoFrameskip-v4 --VERBOSE --RUN_TIMES 1 --AGENT CNN-Dueling-DQN --SAVE
+    python run_learning_atari.py --ENV_ID PongNoFrameskip-v4 --VERBOSE --RUN_TIMES 1 --AGENT CNN-Dueling-DQN --SAVE --NUM_UPDATES 1000000
+elif [[ "$*" == "pong-fig6-right-expert" ]]
+then
+    python run_learning_atari.py --ENV_ID PongNoFrameskip-v4 --VERBOSE --RUN_TIMES 2 --SAVE_FNAME pong_expert_base_cnn_ddqn.csv
+    python run_learning_atari.py --ENV_ID PongNoFrameskip-v4 --RUN_EXPERT_GRAMMAR --NUM_MACROS 2 --LOAD_CKPT agents/trained/1000000_atari_ddqn_agent.pt --SAVE_FNAME pong_expert_1M_2Macros.csv --VERBOSE --RUN_TIMES 2
+    python run_learning_atari.py --ENV_ID PongNoFrameskip-v4 --RUN_EXPERT_GRAMMAR --NUM_MACROS 4 --LOAD_CKPT agents/trained/1000000_atari_ddqn_agent.pt --SAVE_FNAME pong_expert_1M_4Macros.csv --VERBOSE --RUN_TIMES 2
 elif [[ "$*" == "pong-atari-online" ]]
 then
     echo "Run Pong ATARI Online Grammar-DQN Experiments (fig 8 r2 left)"

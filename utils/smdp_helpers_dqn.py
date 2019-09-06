@@ -6,9 +6,10 @@ from collections import deque
 import argparse
 
 import torch
-from agents.dqn import MLP_DQN, MLP_DDQN, init_agent
+from agents.dqn import CNN_DDQN, MLP_DQN, MLP_DDQN, init_agent
 from utils.general_dqn import command_line_dqn_grid, ReplayBuffer
 from utils.cfg_grammar import get_macros, letter_to_action, action_to_letter
+from utils.atari_wrapper import make_atari, wrap_deepmind, wrap_pytorch
 
 
 def command_line_grammar_dqn(dqn_parser):
@@ -66,19 +67,35 @@ def macro_action_exec(ep_id, obs, steps, replay_buffer, macro, env, GAMMA):
 
 
 def rollout_macro_episode(agents, GAMMA, MAX_STEPS, ENV_ID, macros=None):
-    env = gym.make(ENV_ID)
+    if ENV_ID == "dense-v0":
+        env = gym.make(ENV_ID)
+    else:
+        # Wrap the ATARI env in DeepMind Wrapper
+        env = make_atari(ENV_ID)
+        env = wrap_deepmind(env, episode_life=True, clip_rewards=True,
+                            frame_stack=True, scale=True)
+        env = wrap_pytorch(env)
     # Rollout the policy for a single episode - greedy!
     replay_buffer = ReplayBuffer(capacity=20000)
     obs = env.reset()
     episode_rew = 0
     steps = 0
 
+    if ENV_ID == "dense-v0":
+        NUM_PRIMITIVES = 4
+    elif ENV_ID == "PongNoFrameskip-v4":
+        NUM_PRIMITIVES = 6
+    elif ENV_ID == "SeaquestNoFrameskip-v4":
+        NUM_PRIMITIVES = 18
+    elif ENV_ID == "MsPacmanNoFrameskip-v4":
+        NUM_PRIMITIVES = 9
+
     while steps < MAX_STEPS:
         if ENV_ID == "dense-v0":
             action = agents["current"].act(obs.flatten(), epsilon=0.05)
         else:
             action = agents["current"].act(obs, epsilon=0.05)
-        if action < 4:
+        if action < NUM_PRIMITIVES:
             next_obs, reward, done, _  = env.step(action)
             steps += 1
 
@@ -87,7 +104,7 @@ def rollout_macro_episode(agents, GAMMA, MAX_STEPS, ENV_ID, macros=None):
                                reward, next_obs, done)
         else:
             # Need to execute a macro action
-            macro = macros[action - 4]
+            macro = macros[action - NUM_PRIMITIVES]
             next_obs, reward, done, _ = macro_action_exec(0, obs, steps,
                                                           replay_buffer,
                                                           macro, env,
@@ -111,7 +128,7 @@ def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
     elif AGENT == "CNN-Dueling-DQN":
         agents, optimizer = init_agent(CNN_DDQN, 0, USE_CUDA, NUM_ACTIONS, LOAD_CKPT)
 
-    steps, episode_rew, er_buffer = rollout_macro_episode(agents, 1, 200, ENV_ID, macros)
+    steps, episode_rew, er_buffer = rollout_macro_episode(agents, 1, 5000, ENV_ID, macros)
 
     SENTENCE = []
 
@@ -130,9 +147,9 @@ def get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA, AGENT,
         NUM_PRIMITIVES = 9
 
     # Collect actions from rollout into string & call sequitur
-    macros, counts = get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, GRAMMAR_DIR,
-                                k=k, g_type=g_type)
-    return macros, counts
+    macros, counts, stats = get_macros(NUM_MACROS, SENTENCE, NUM_PRIMITIVES, GRAMMAR_DIR,
+                                       k=k, g_type=g_type)
+    return macros, counts, stats
 
 
 if __name__ == "__main__":

@@ -200,8 +200,9 @@ def run_smdp_dqn_learning(args):
     elif GRAMMAR_TYPE == "lexis":
         GRAMMAR_DIR = LEXIS_DIR
 
-    macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA, AGENT,
-                                          LOAD_CKPT, GRAMMAR_DIR, ENV_ID, g_type=GRAMMAR_TYPE)
+    macros, counts, stats = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA, AGENT,
+                                                 LOAD_CKPT, GRAMMAR_DIR, ENV_ID,
+                                                 g_type=GRAMMAR_TYPE)
 
     NUM_ACTIONS = 4 + NUM_MACROS
     if AGENT == "DOUBLE": TRAIN_DOUBLE = True
@@ -367,9 +368,9 @@ def run_online_dqn_smdp_learning(args):
 
     # Get random rollout and add num-macros actions
     torch.save(agents["current"].state_dict(), LOAD_CKPT)
-    macros, counts = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
-                                          AGENT, LOAD_CKPT, GRAMMAR_DIR, ENV_ID,
-                                          g_type=GRAMMAR_TYPE)
+    macros, counts, stats = get_macro_from_agent(NUM_MACROS, 4, USE_CUDA,
+                                                 AGENT, LOAD_CKPT, GRAMMAR_DIR, ENV_ID,
+                                                 g_type=GRAMMAR_TYPE)
 
     # Setup agent, replay replay_buffer, logging stats df
     if AGENT == "MLP-DQN" or AGENT == "DOUBLE":
@@ -399,6 +400,15 @@ def run_online_dqn_smdp_learning(args):
                             frame_stack=True, scale=True)
         env = wrap_pytorch(env)
 
+    if ENV_ID == "dense-v0":
+        NUM_PRIMITIVES = 4
+    elif ENV_ID == "PongNoFrameskip-v4":
+        NUM_PRIMITIVES = 6
+    elif ENV_ID == "SeaquestNoFrameskip-v4":
+        NUM_PRIMITIVES = 18
+    elif ENV_ID == "MsPacmanNoFrameskip-v4":
+        NUM_PRIMITIVES = 9
+
     ep_id = 0
     # RUN TRAINING LOOP OVER EPISODES
     while opt_counter < NUM_UPDATES:
@@ -413,7 +423,7 @@ def run_online_dqn_smdp_learning(args):
             else:
                 action = agents["current"].act(obs, epsilon)
 
-            if action < 4:
+            if action < NUM_PRIMITIVES:
                 next_obs, rew, done, _  = env.step(action)
                 steps += 1
 
@@ -422,7 +432,7 @@ def run_online_dqn_smdp_learning(args):
                                    rew, next_obs, done)
             else:
                 # Need to execute a macro action
-                macro = macros[action - 4]
+                macro = macros[action - NUM_PRIMITIVES]
                 next_obs, macro_rew, done, _ = macro_action_exec(ep_id, obs,
                                                                  steps,
                                                                  replay_buffer,
@@ -444,9 +454,9 @@ def run_online_dqn_smdp_learning(args):
             # Check for Online Transfer
             if (opt_counter+1) % GRAMMAR_EVERY == 0:
                 torch.save(agents["current"].state_dict(), LOAD_CKPT)
-                macros, counts = get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA,
-                                                      AGENT, LOAD_CKPT, GRAMMAR_DIR, ENV_ID,
-                                                      macros, GRAMMAR_TYPE)
+                macros, counts, stats = get_macro_from_agent(NUM_MACROS, NUM_ACTIONS, USE_CUDA,
+                                                            AGENT, LOAD_CKPT, GRAMMAR_DIR,
+                                                            ENV_ID, macros, GRAMMAR_TYPE)
 
             # On-Policy Rollout for Performance evaluation
             if (opt_counter+1) % ROLLOUT_EVERY == 0:
