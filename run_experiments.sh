@@ -46,7 +46,7 @@ then
     python run_learning_towers.py --N_DISKS 6 --LEARN_TYPE Imitation-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE G-Lexis --SAVE_FNAME g_lexis_TOH.csv
 elif [[ "$*" == "toh-online" ]]
 then
-    # TODO: ONLINE GRAMMAR EXPERIMENTS 5+6 Disk Environment Schedule k?!
+    # TODO: ONLINE GRAMMAR EXPERIMENTS 5+6 Disk Environment Schedule k!
     echo "Run ToH Tabular Online Grammar Experiments (figure 8 r1 left+middle)"
     python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE 3-Sequitur --SAVE_FNAME seq_TOH.csv
     python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 5 --GRAMMAR_TYPE G-Lexis --SAVE_FNAME g_lexis_TOH.csv
@@ -63,21 +63,21 @@ then
 elif [[ "$*" == "grid-fig7-left" ]]
 then
     echo "Run Grid Expert Grammar-DQN Experiments (fig 7 left)"
-    # RUNNING: BASELINE (DQN + Dueling DQN) EXPERT GRAMMAR (DQN AFTER 1 MIO ITS)
+    # ✓ BASELINE (DQN + Dueling DQN) EXPERT GRAMMAR (DQN AFTER 1 MIO ITS)
     python run_learning_grid.py --RUN_TIMES 4 --SAVE_FNAME dqn_stats.csv --VERBOSE
     python run_learning_grid.py --AGENT MLP-Dueling-DQN --RUN_TIMES 4 --SAVE_FNAME dueling_stats.csv
     python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/1000000_mlp_agent.pt --SAVE_FNAME grid_expert_1M.csv
 elif [[ "$*" == "grid-fig7-middle" ]]
 then
     echo "Run Grid Transfer Grammar-DQN Experiments (fig 7 middle)"
-    # RUNNING: TRANSFER GRAMMAR SIMULATIONS (DQN AGENT AFTER 250/500K ITS)
+    # ✓ TRANSFER GRAMMAR SIMULATIONS (DQN AGENT AFTER 250/500K ITS)
     python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/250000_mlp_agent.pt --SAVE_FNAME grid_transfer_250k.csv --VERBOSE
     python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --LOAD_CKPT agents/trained/500000_mlp_agent.pt --SAVE_FNAME grid_transfer_500k.csv
     python run_learning_grid.py --RUN_TIMES 4 --RUN_EXPERT_GRAMMAR --NUM_MACROS 4 --LOAD_CKPT agents/trained/1000000_mlp_agent.pt --SAVE_FNAME grid_expert_1M_4Macros.csv
 elif [[ "$*" == "grid-online" ]]
 then
     echo "Run Gridworld Online Grammar-DQN Experiments (fig 8 r1 right)"
-    # TORUN: ONLINE GRAMMAR SIMULATIONS
+    # ✓ ONLINE GRAMMAR SIMULATIONS
     python run_learning_grid.py --AGENT MLP-Dueling-DQN --RUN_TIMES 5 --SAVE_FNAME grid_online_dueling.csv --RUN_ONLINE_GRAMMAR
 ################################################################################
 # RUN ATARI DQN EXPERIMENTS

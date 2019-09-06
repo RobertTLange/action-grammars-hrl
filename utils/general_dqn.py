@@ -13,6 +13,7 @@ import torch.autograd as autograd
 import torch.multiprocessing as mp
 
 from utils.atari_wrapper import make_atari, wrap_deepmind, wrap_pytorch
+from utils.smdp_helpers_dqn import rollout_macro_episode
 
 
 def command_line_dqn_grid(parent=False):
@@ -170,12 +171,16 @@ def compute_td_loss(agents, optimizer, replay_buffer,
     return loss
 
 
-def get_logging_stats(opt_counter, agents, GAMMA, NUM_ROLLOUTS, MAX_STEPS, ENV_ID):
+def get_logging_stats(opt_counter, agents, GAMMA, NUM_ROLLOUTS, MAX_STEPS,
+                      ENV_ID, macros=None):
     steps = []
     rew = []
 
     for i in range(NUM_ROLLOUTS):
-        step_temp, reward_temp, buffer = rollout_episode(agents, GAMMA, MAX_STEPS, ENV_ID)
+        if macros is None:
+            step_temp, reward_temp, buffer = rollout_episode(agents, GAMMA, MAX_STEPS, ENV_ID)
+        else:
+            step_temp, reward_temp, buffer = rollout_macro_episode(agents, GAMMA, MAX_STEPS, ENV_ID, macros)
         steps.append(step_temp)
         rew.append(reward_temp)
 

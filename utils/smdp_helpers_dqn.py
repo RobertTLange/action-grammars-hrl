@@ -7,7 +7,6 @@ import argparse
 
 import torch
 from agents.dqn import CNN_DDQN, MLP_DQN, MLP_DDQN, init_agent
-from utils.general_dqn import command_line_dqn_grid, ReplayBuffer
 from utils.cfg_grammar import get_macros, letter_to_action, action_to_letter
 from utils.atari_wrapper import make_atari, wrap_deepmind, wrap_pytorch
 
@@ -27,6 +26,22 @@ def command_line_grammar_dqn(dqn_parser):
     parser.add_argument('-run_online', '--RUN_ONLINE_GRAMMAR', action='store_true',
                         default=False)
     return parser.parse_args()
+
+
+class ReplayBuffer(object):
+    def __init__(self, capacity, record_macros=False):
+        self.buffer = deque(maxlen=capacity)
+
+    def push(self, ep_id, step, state, action,
+             reward, next_state, done):
+        self.buffer.append((ep_id, step, state, action, reward, next_state, done))
+
+    def sample(self, batch_size):
+        ep_id, step, state, action, reward, next_state, done = zip(*random.sample(self.buffer, batch_size))
+        return np.stack(state), action, reward, np.stack(next_state), done
+
+    def __len__(self):
+        return len(self.buffer)
 
 
 class MacroBuffer(object):

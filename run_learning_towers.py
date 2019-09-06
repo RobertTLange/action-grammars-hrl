@@ -116,4 +116,4 @@ if __name__ == "__main__":
     args = command_line_towers()
     run_learning(args)
 
-    # python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 1 --GRAMMAR_TYPE 3-Sequitur --VERBOSE
+    # python run_learning_towers.py --N_DISKS 5 --LEARN_TYPE Online-SMDP-Q-Learning  --RUN_TIMES 1 --GRAMMAR_TYPE G-Lexis --VERBOSE

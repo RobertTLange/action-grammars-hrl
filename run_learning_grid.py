@@ -276,7 +276,7 @@ def run_smdp_dqn_learning(args):
             if (opt_counter+1) % ROLLOUT_EVERY == 0:
                 r_stats, s_stats = get_logging_stats(opt_counter, agents,
                                                      GAMMA, NUM_ROLLOUTS,
-                                                     MAX_STEPS, ENV_ID)
+                                                     MAX_STEPS, ENV_ID, macros)
                 reward_stats = pd.concat([reward_stats, r_stats], axis=0)
                 step_stats = pd.concat([step_stats, s_stats], axis=0)
 

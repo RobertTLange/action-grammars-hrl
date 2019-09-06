@@ -128,11 +128,8 @@ class run_grammar():
             except:
                 pass
 
-        print(nonterminals)
-        print(productions)
         rename_list = range(1, len(nonterminals))
         rename_dict = dict(zip(nonterminals, rename_list))
-
         for i, prod in enumerate(productions):
             prod_temp = prod.split()
             for key in rename_dict.keys():
@@ -149,7 +146,7 @@ class run_grammar():
         # Add awkward "-" to be able to differentiate when working with >9 prod
         for i, prod in enumerate(productions):
             productions[i] = productions[i].replace(" ", "-")
-            productions[i] = productions[i][:-1]
+
         productions[0] = productions[0][:-1]
         # Recursively flatten the production rules by plugging productions in
         flat_productions = productions[:]
