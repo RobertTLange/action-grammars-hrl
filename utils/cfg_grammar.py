@@ -87,6 +87,7 @@ class run_grammar():
         productions[0] = productions[0][:-1]
         # Recursively flatten the production rules by plugging productions in
         flat_productions = productions[:]
+
         while any(any(char.isdigit() for char in prod) for prod in flat_productions):
             for numb in reversed(rename_list):
                 for i, prod in enumerate(flat_productions):
@@ -128,7 +129,7 @@ class run_grammar():
             except:
                 pass
 
-        rename_list = range(1, len(nonterminals))
+        rename_list = range(0, len(nonterminals))
         rename_dict = dict(zip(nonterminals, rename_list))
         for i, prod in enumerate(productions):
             prod_temp = prod.split()
@@ -147,7 +148,6 @@ class run_grammar():
         for i, prod in enumerate(productions):
             productions[i] = productions[i].replace(" ", "-")
 
-        productions[0] = productions[0][:-1]
         # Recursively flatten the production rules by plugging productions in
         flat_productions = productions[:]
         while any(any(char.isdigit() for char in prod) for prod in flat_productions):

@@ -84,7 +84,7 @@ def learning_params(l_type, NUM_DISKS=4, ONLINE=False):
 
     if ONLINE:
         if NUM_DISKS == 5:
-            schedule_its = np.linspace(5000, 170000, 5)
+            schedule_its = np.linspace(50000, 170000, 5)
             schedule_k = [5, 4, 3, 2, 2]
         elif NUM_DISKS == 6:
             schedule_its = np.linspace(100000, 700000, 10)
