@@ -181,9 +181,17 @@ class run_grammar():
         # Obtain compression info (i.e. ration of encoded and original string)
         lengths = []
 
+        print("Full Sequence", self.flat_productions[0])
+        print("Encoded Sequence", self.S)
+
         init_seq = self.flat_productions[0]
         lengths.append(len(init_seq))
-        lengths.append(len(self.S))
+        print(len(init_seq))
+        temp_split_string = self.S.split("-")
+        print(temp_split_string)
+        print(len(temp_split_string))
+        print(len(self.S))
+        lengths.append(len(temp_split_string))
         self.lengths = lengths
         self.length_ratio = float(lengths[1])/lengths[0]
 
@@ -192,9 +200,9 @@ class run_grammar():
             entropy = - sum([p * math.log(p) / math.log(2.0) for p in prob])
             return entropy
 
-        comp_ratio = float(len(init_seq))/len(self.S)
+        comp_ratio = float(len(init_seq))/len(temp_split_string)
         shannon_pre = shannon_entropy(init_seq)
-        shannon_post = shannon_entropy(self.S)
+        shannon_post = shannon_entropy(temp_split_string)
 
         if print_out:
             print("Compression Ratio:", comp_ratio)
@@ -202,6 +210,7 @@ class run_grammar():
             print("Post-Compression Shannon Entropy:", shannon_post)
 
         stats = [comp_ratio, shannon_pre, shannon_post]
+        print(stats)
         return stats
 
 
